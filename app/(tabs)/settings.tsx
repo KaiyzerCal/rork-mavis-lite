@@ -10,6 +10,7 @@ import {
   Modal,
   ActivityIndicator,
   TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Settings as SettingsIcon, User, Shield, Trash2, FileText, Sparkle, Palette, ChevronRight, ImageIcon, Cloud, CloudOff, RefreshCw, Calendar, Link2, RotateCcw, Edit3 } from 'lucide-react-native';
@@ -875,12 +876,20 @@ export default function Settings() {
 
         <Modal
           visible={naviNameModalVisible}
-          animationType="slide"
+          animationType="fade"
           transparent={true}
           onRequestClose={() => setNaviNameModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.naviNameModalOverlay}
+          >
+            <TouchableOpacity 
+              style={styles.naviNameModalBackdrop} 
+              activeOpacity={1} 
+              onPress={() => setNaviNameModalVisible(false)}
+            />
+            <View style={styles.naviNameModalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Change Navi Name</Text>
                 <TouchableOpacity onPress={() => setNaviNameModalVisible(false)}>
@@ -926,7 +935,7 @@ export default function Settings() {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       </View>
     </View>
@@ -1456,5 +1465,32 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600' as const,
     color: '#ffffff',
+  },
+  naviNameModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  naviNameModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  naviNameModalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    width: '90%',
+    maxWidth: 400,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
 });
