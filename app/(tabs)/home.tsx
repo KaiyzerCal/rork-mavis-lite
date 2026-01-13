@@ -8,10 +8,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Sparkle, MessageCircle, Target, TrendingUp } from 'lucide-react-native';
+import { MessageCircle, Target, TrendingUp, Sparkle } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { useApp } from '@/contexts/AppContext';
+import NaviAvatar from '@/components/NaviAvatar';
 
 export default function Home() {
   const { state, isLoaded, calculateLevel } = useApp();
@@ -65,9 +66,15 @@ export default function Home() {
             onPress={() => router.push('/mavis')}
             activeOpacity={0.8}
           >
-            <View style={styles.naviAvatarContainer}>
-              <Sparkle size={40} color="#6366f1" fill="#6366f1" />
-            </View>
+            <NaviAvatar
+              primaryColor={naviProfile.avatar.primaryColor}
+              secondaryColor={naviProfile.avatar.secondaryColor}
+              backgroundColor={naviProfile.avatar.backgroundColor}
+              style={naviProfile.avatar.style}
+              shape={naviProfile.avatar.shape}
+              glowEnabled={naviProfile.avatar.glowEnabled}
+              size={64}
+            />
             <View style={styles.naviContent}>
               <Text style={styles.naviLabel}>Your Net-Navi</Text>
               <Text style={styles.naviName}>{naviProfile.name}</Text>
@@ -244,17 +251,9 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  naviAvatarContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#eef2ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
   naviContent: {
     flex: 1,
+    marginLeft: 16,
   },
   naviLabel: {
     fontSize: 12,
