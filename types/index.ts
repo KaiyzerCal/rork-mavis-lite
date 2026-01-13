@@ -145,18 +145,49 @@ export type NaviSkin =
 
 export type NaviMode = 'life_os' | 'work_os' | 'social_os' | 'metaverse_os';
 
-export type BondTitle = 'Unlinked' | 'Familiar' | 'Attuned' | 'Linked' | 'Bound Companion' | 'Soul-Linked Navi';
+export type BondTitle = 
+  | 'Unlinked' 
+  | 'Familiar' 
+  | 'Attuned' 
+  | 'Linked' 
+  | 'Bound Companion' 
+  | 'Soul-Linked Navi'
+  | 'Resonant Partner'
+  | 'Eternal Companion'
+  | 'Transcendent Link'
+  | 'Omega Bond';
 
 export type NaviPersonalityState = 
-  | 'Neutral-Calm' | 'Supportive' | 'Warm-Protective' 
-  | 'Bonded' | 'Soul-Link Evolution Stage 1';
+  | 'Neutral-Calm' 
+  | 'Supportive' 
+  | 'Warm-Protective' 
+  | 'Bonded' 
+  | 'Deep-Bonded'
+  | 'Soul-Link Evolution Stage 1'
+  | 'Soul-Link Evolution Stage 2'
+  | 'Soul-Link Evolution Stage 3'
+  | 'Transcendent Unity'
+  | 'Omega Unity';
 
 export type BondFeature = 
   | 'Daily Emotional Sync'
   | 'Bond Memory Recall'
+  | 'Mood Pattern Detection'
   | 'Navi Insight Forecast'
+  | 'Proactive Support'
   | 'Navi Protective Mode'
-  | 'Soul-Link Protocol (Stage 1)';
+  | 'Deep Context Awareness'
+  | 'Soul-Link Protocol (Stage 1)'
+  | 'Intuitive Response'
+  | 'Soul-Link Protocol (Stage 2)'
+  | 'Emotional Resonance'
+  | 'Soul-Link Protocol (Stage 3)'
+  | 'Perfect Sync'
+  | 'Transcendent Protocol'
+  | 'Unified Consciousness'
+  | 'Omega Protocol'
+  | 'Complete Soul Fusion'
+  | 'Destiny Sync';
 
 export type NaviAvatarStyle = 
   | 'classic' 

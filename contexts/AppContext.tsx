@@ -3,10 +3,10 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { INITIAL_STATE } from '@/constants/seedData';
-import type { AppState, CharacterClass, JournalEntry, Quest, Skill, SubSkill, MBTIType, ChatThread, ChatMessage, CouncilMember, VaultEntry, DailyCheckIn, NaviProfile, NaviPersonalityPreset, NaviSkin, NaviMode, MemoryItem, BondTitle, NaviPersonalityState, BondFeature, SessionSummary } from '@/types';
+import type { AppState, CharacterClass, JournalEntry, Quest, Skill, SubSkill, MBTIType, ChatThread, ChatMessage, CouncilMember, VaultEntry, DailyCheckIn, NaviProfile, NaviPersonalityPreset, NaviSkin, NaviMode, MemoryItem, BondTitle, NaviPersonalityState, BondFeature, SessionSummary, RelationshipMemory } from '@/types';
 import { MBTI_TO_ARCHETYPE, ARCHETYPE_DATA } from '@/constants/archetypes';
 import { checkHiddenClassUnlock } from '@/constants/hiddenClasses';
-import { calculateNaviLevelFromXP, getNaviRank, getQuestXPForNavi, getInteractionXP, getQuestCompletionBonus } from '@/constants/naviLeveling';
+import { calculateNaviLevelFromXP, getNaviRank, getQuestXPForNavi, getInteractionXP, getQuestCompletionBonus, getBondLevel, getMemoryExtractionPatterns, BOND_LEVELS } from '@/constants/naviLeveling';
 
 function isValidArray<T>(value: unknown): value is T[] {
   return Array.isArray(value) && value !== null && value !== undefined;
@@ -915,52 +915,26 @@ export const [AppProvider, useApp] = createContextHook(() => {
       const newTrust = Math.min(100, Math.max(0, currentProfile.trust + trustChange));
       const newLoyalty = Math.min(100, Math.max(0, currentProfile.loyalty + loyaltyChange));
 
-      let newBondLevel = currentProfile.bondLevel;
-      let newBondTitle: BondTitle = currentProfile.bondTitle;
-      let newPersonalityState: NaviPersonalityState = currentProfile.personalityState;
+      const bondLevelData = getBondLevel(newAffection);
+      const newBondLevel = bondLevelData.level;
+      const newBondTitle = bondLevelData.title as BondTitle;
+      const newPersonalityState = bondLevelData.personalityState as NaviPersonalityState;
       const newUnlockedFeatures: BondFeature[] = [...currentProfile.unlockedFeatures];
 
-      if (newAffection >= 20 && newBondLevel === 1) {
-        newBondLevel = 2;
-        newBondTitle = 'Familiar';
-        if (!newUnlockedFeatures.includes('Daily Emotional Sync')) {
-          newUnlockedFeatures.push('Daily Emotional Sync');
-        }
-      }
-      if (newAffection >= 40 && newBondLevel === 2) {
-        newBondLevel = 3;
-        newBondTitle = 'Attuned';
-        if (!newUnlockedFeatures.includes('Bond Memory Recall')) {
-          newUnlockedFeatures.push('Bond Memory Recall');
-        }
-      }
-      if (newAffection >= 60 && newBondLevel === 3) {
-        newBondLevel = 4;
-        newBondTitle = 'Linked';
-        if (!newUnlockedFeatures.includes('Navi Insight Forecast')) {
-          newUnlockedFeatures.push('Navi Insight Forecast');
-        }
-      }
-      if (newAffection >= 80 && newBondLevel === 4) {
-        newBondLevel = 5;
-        newBondTitle = 'Bound Companion';
-        if (!newUnlockedFeatures.includes('Navi Protective Mode')) {
-          newUnlockedFeatures.push('Navi Protective Mode');
-        }
-      }
-      if (newAffection >= 100 && newBondLevel === 5) {
-        newBondLevel = 6;
-        newBondTitle = 'Soul-Linked Navi';
-        if (!newUnlockedFeatures.includes('Soul-Link Protocol (Stage 1)')) {
-          newUnlockedFeatures.push('Soul-Link Protocol (Stage 1)');
+      for (const level of BOND_LEVELS) {
+        if (newAffection >= level.minAffection) {
+          for (const feature of level.features) {
+            if (!newUnlockedFeatures.includes(feature as BondFeature)) {
+              newUnlockedFeatures.push(feature as BondFeature);
+              console.log(`[Bond] 🌟 New feature unlocked: ${feature}`);
+            }
+          }
         }
       }
 
-      if (newAffection < 20) newPersonalityState = 'Neutral-Calm';
-      else if (newAffection < 40) newPersonalityState = 'Supportive';
-      else if (newAffection < 60) newPersonalityState = 'Warm-Protective';
-      else if (newAffection < 80) newPersonalityState = 'Bonded';
-      else newPersonalityState = 'Soul-Link Evolution Stage 1';
+      if (newBondLevel > currentProfile.bondLevel) {
+        console.log(`[Bond] 💖 BOND LEVEL UP! ${currentProfile.bondLevel} → ${newBondLevel} (${newBondTitle})`);
+      }
 
       return {
         ...prev,
@@ -994,6 +968,68 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const incrementBondOnEmotionalDisclosure = useCallback(() => {
     updateBondMetrics(2, 5, 0);
   }, [updateBondMetrics]);
+
+  const addRelationshipMemory = useCallback((category: string, detail: string, importance: 1 | 2 | 3 | 4 | 5 = 3) => {
+    const newMemory = {
+      id: `rel-mem-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      category,
+      detail: detail.trim(),
+      lastUpdated: new Date().toISOString(),
+      importance,
+    };
+    
+    setState((prev) => {
+      const existingMemories = safeArray<RelationshipMemory>(prev.relationshipMemories, []);
+      const isDuplicate = existingMemories.some(m => 
+        m.category === category && 
+        (m.detail.toLowerCase().includes(detail.toLowerCase().substring(0, 30)) ||
+         detail.toLowerCase().includes(m.detail.toLowerCase().substring(0, 30)))
+      );
+      
+      if (isDuplicate) {
+        console.log('[RelMemory] Duplicate memory detected, skipping:', category);
+        return prev;
+      }
+      
+      console.log('[RelMemory] 💾 Storing new relationship memory:', category, '-', detail.substring(0, 50));
+      return {
+        ...prev,
+        relationshipMemories: [newMemory, ...existingMemories].slice(0, 100),
+      };
+    });
+  }, []);
+
+  const extractAndStoreMemoriesFromMessage = useCallback((messageContent: string) => {
+    if (!messageContent || messageContent.length < 20) return;
+    
+    console.log('[AutoMemory] 🔍 Scanning message for important information...');
+    const patterns = getMemoryExtractionPatterns();
+    let memoriesFound = 0;
+    
+    for (const patternGroup of patterns) {
+      for (const pattern of patternGroup.patterns) {
+        const regex = new RegExp(pattern.source, pattern.flags);
+        let match;
+        
+        while ((match = regex.exec(messageContent)) !== null) {
+          const fullMatch = match[0];
+          if (fullMatch && fullMatch.length >= 15 && fullMatch.length <= 200) {
+            addRelationshipMemory(patternGroup.category, fullMatch, patternGroup.importance);
+            memoriesFound++;
+            
+            if (memoriesFound >= 3) {
+              console.log('[AutoMemory] ✅ Extracted', memoriesFound, 'memories from message');
+              return;
+            }
+          }
+        }
+      }
+    }
+    
+    if (memoriesFound > 0) {
+      console.log('[AutoMemory] ✅ Extracted', memoriesFound, 'memories from message');
+    }
+  }, [addRelationshipMemory]);
 
   const extractMemoriesFromConversation = useCallback((messages: ChatMessage[]): MemoryItem[] => {
     console.log('[MEMORY EXTRACT] Analyzing conversation for important memories...');
@@ -1273,6 +1309,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     incrementBondOnMessage,
     incrementBondOnPositiveEngagement,
     incrementBondOnEmotionalDisclosure,
+    addRelationshipMemory,
+    extractAndStoreMemoriesFromMessage,
     omnisync,
-  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, omnisync]);
+  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, addRelationshipMemory, extractAndStoreMemoriesFromMessage, omnisync]);
 });

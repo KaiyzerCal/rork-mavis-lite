@@ -60,7 +60,7 @@ export default function NaviEXE() {
   const lastProcessedMessageIdRef = useRef<string | null>(null);
   const streamingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
-  const { state, isLoaded, acceptQuest, declineQuest, getChatHistory, saveChatMessage, addQuest } = useApp();
+  const { state, isLoaded, acceptQuest, declineQuest, getChatHistory, saveChatMessage, addQuest, extractAndStoreMemoriesFromMessage } = useApp();
   const naviAPI = useNaviAPI();
 
   const activeQuests = useMemo(() => state.quests.filter(q => q.status === 'active'), [state.quests]);
@@ -496,6 +496,8 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     
     addUserMessage(messageToSend);
     
+    extractAndStoreMemoriesFromMessage(messageToSend);
+    
     naviAPI.navi.incrementBond('message').catch(console.error);
     naviAPI.navi.incrementInteraction().catch(console.error);
     
@@ -517,7 +519,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
       setIsStreaming(false);
       Alert.alert('Connection Error', 'Unable to reach AI service. Please try again.');
     }
-  }, [input, isStreaming, sendMessage, systemPrompt, naviAPI, chatMessages, addUserMessage]);
+  }, [input, isStreaming, sendMessage, systemPrompt, naviAPI, chatMessages, addUserMessage, extractAndStoreMemoriesFromMessage]);
 
   useEffect(() => {
     if (agentError) {
