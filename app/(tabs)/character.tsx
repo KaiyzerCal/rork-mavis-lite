@@ -73,7 +73,7 @@ const SHAPE_OPTIONS: { id: 'circle' | 'rounded-square' | 'hexagon' | 'diamond'; 
 ];
 
 export default function Character() {
-  const { state, isLoaded, calculateLevel, addSkill, updateSkill, deleteSkill, addSubSkill, updateSubSkill, deleteSubSkill, updateNaviAvatar, resetCharacterClass, updateNaviName } = useApp();
+  const { state, isLoaded, calculateLevel, addSkill, updateSkill, deleteSkill, addSubSkill, updateSubSkill, deleteSubSkill, updateNaviAvatar, updateNaviName } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [naviNameModalVisible, setNaviNameModalVisible] = useState<boolean>(false);
@@ -212,29 +212,6 @@ export default function Character() {
             )}
 
             <Text style={styles.description}>{archetypeInfo.description}</Text>
-
-            <TouchableOpacity
-              style={styles.retakeAssessmentButton}
-              onPress={() => {
-                Alert.alert(
-                  'Retake Assessment',
-                  'Are you sure you want to retake the character class assessment? Your current class progress will be reset.',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Retake',
-                      style: 'destructive',
-                      onPress: () => {
-                        resetCharacterClass();
-                        router.replace('/dashboard');
-                      },
-                    },
-                  ]
-                );
-              }}
-            >
-              <Text style={styles.retakeAssessmentText}>Retake Assessment</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.xpCard}>
