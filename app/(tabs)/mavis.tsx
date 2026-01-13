@@ -34,7 +34,7 @@ interface ProposedQuest {
 export default function NaviEXE() {
   const [input, setInput] = useState<string>('');
   const [showScrollButton, setShowScrollButton] = useState<boolean>(false);
-  const [hasLoadedHistory, setHasLoadedHistory] = useState<boolean>(false);
+  const [displayMessages, setDisplayMessages] = useState<{id: string; role: 'user' | 'assistant'; content: string; timestamp: string}[]>([]);
   const [proposedQuests, setProposedQuests] = useState<ProposedQuest[]>([]);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
@@ -286,7 +286,20 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
 - Show continuity and understanding across all sessions`;
   }, [state, activeQuests, pendingQuests, completedQuests, getChatHistory]);
 
-  const chatHistory = getChatHistory();
+  const storedChatHistory = getChatHistory();
+  
+  useEffect(() => {
+    if (isLoaded && storedChatHistory.length > 0 && displayMessages.length === 0) {
+      console.log('[Navi.EXE] 🔄 Syncing displayMessages with stored chat history:', storedChatHistory.length);
+      const loadedMessages = storedChatHistory.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.full_output || msg.content,
+        timestamp: msg.timestamp,
+      }));
+      setDisplayMessages(loadedMessages);
+    }
+  }, [isLoaded, storedChatHistory, displayMessages.length]);
   
   const { messages, sendMessage, error: agentError } = useRorkAgent({
     tools: {},
@@ -297,45 +310,48 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
 
   useEffect(() => {
     const initializeChat = async () => {
-      if (!isLoaded || !state?.user?.id || hasLoadedHistory) return;
+      if (!isLoaded || !state?.user?.id) return;
       
       const currentHistory = getChatHistory();
-      console.log('[Navi.EXE] 🔄 FULLPERSIST v4: Initializing chat with persistent history');
+      console.log('[Navi.EXE] 🔄 FULLPERSIST v5: Initializing chat with persistent history');
       console.log('[Navi.EXE] 🔄 Chat history entries:', currentHistory.length);
       
       if (currentHistory.length > 0) {
         console.log('[Navi.EXE] 🔄 Loading', currentHistory.length, 'previous messages from storage');
         
+        const loadedMessages = currentHistory.map(msg => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.full_output || msg.content,
+          timestamp: msg.timestamp,
+        }));
+        
+        setDisplayMessages(loadedMessages);
+        
         currentHistory.slice(-3).forEach((msg, idx) => {
           const effectiveContent = msg.full_output || msg.content;
-          console.log(`[Navi.EXE] 🔄 FULLPERSIST v4 Loaded message ${currentHistory.length - 3 + idx + 1}:`, {
+          console.log(`[Navi.EXE] 🔄 Loaded message ${currentHistory.length - 3 + idx + 1}:`, {
+            id: msg.id,
             role: msg.role,
-            contentLength: msg.content.length,
-            fullOutputLength: msg.full_output?.length || 0,
-            effectiveLength: effectiveContent.length,
-            hasFullOutput: !!msg.full_output,
-            contentMatchesFullOutput: msg.content === msg.full_output,
-            firstChars: effectiveContent.substring(0, 80),
-            lastChars: effectiveContent.substring(Math.max(0, effectiveContent.length - 80)),
-            persistVersion: msg.metadata?.persistVersion,
+            contentLength: effectiveContent.length,
+            preview: effectiveContent.substring(0, 100),
           });
         });
       }
       
-      setHasLoadedHistory(true);
     };
     
     initializeChat();
-  }, [isLoaded, state?.user?.id, hasLoadedHistory, getChatHistory]);
+  }, [isLoaded, state?.user?.id, getChatHistory]);
 
   useEffect(() => {
     if (!state?.user?.id) return;
     console.log('[Navi.EXE] Chat key:', `navi-chat-${state.user.id}`);
     console.log('[Navi.EXE] System prompt updated, length:', systemPrompt.length, 'characters');
     console.log('[Navi.EXE] Agent messages count:', messages.length);
-    console.log('[Navi.EXE] Stored chat history count:', chatHistory.length);
+    console.log('[Navi.EXE] Display messages count:', displayMessages.length);
     console.log('[Navi.EXE] Is streaming:', isStreaming);
-  }, [messages.length, isStreaming, systemPrompt.length, state?.user?.id, chatHistory.length]);
+  }, [messages.length, isStreaming, systemPrompt.length, state?.user?.id, displayMessages.length]);
 
 
 
@@ -365,6 +381,16 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     naviAPI.navi.incrementBond('message').catch(err => console.error('[Navi.EXE] Bond increment failed:', err));
     naviAPI.navi.incrementInteraction().catch(err => console.error('[Navi.EXE] Interaction increment failed:', err));
     
+    const userMsgId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const userTimestamp = new Date().toISOString();
+    
+    setDisplayMessages(prev => [...prev, {
+      id: userMsgId,
+      role: 'user' as const,
+      content: messageToSend,
+      timestamp: userTimestamp,
+    }]);
+    
     naviAPI.conversations.save({
       role: 'user',
       content: messageToSend,
@@ -372,15 +398,15 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     
     try {
       console.log('[Navi.EXE] Calling sendMessage');
-      console.log('[Navi.EXE] Including full context with chat history:', chatHistory.length, 'messages');
+      console.log('[Navi.EXE] Including full context with display messages:', displayMessages.length, 'messages');
       
-      const recentMessageCount = Math.min(20, chatHistory.length);
-      const recentMessages = chatHistory.slice(-recentMessageCount);
+      const recentMessageCount = Math.min(20, displayMessages.length);
+      const recentMessages = displayMessages.slice(-recentMessageCount);
       
       const conversationContext = recentMessages.length > 0
-        ? `\n\n[RECENT CONVERSATION - Last ${recentMessageCount} messages]:\n${recentMessages.map((m, i) => {
-            const content = m.full_output || m.content;
-            const messageNum = chatHistory.length - recentMessageCount + i + 1;
+        ? `\n\n[RECENT CONVERSATION - Last ${recentMessageCount} messages]:\n${recentMessages.map((m: {id: string; role: 'user' | 'assistant'; content: string; timestamp: string}, i: number) => {
+            const content = m.content;
+            const messageNum = displayMessages.length - recentMessageCount + i + 1;
             const truncated = content.length > 300 ? content.substring(0, 300) + '...' : content;
             return `[${messageNum}] ${m.role === 'user' ? 'User' : 'Navi'}: ${truncated}`;
           }).join('\n')}\n--- END CONTEXT ---\n\n`
@@ -411,7 +437,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
         [{ text: 'OK' }]
       );
     }
-  }, [input, isStreaming, sendMessage, messages, systemPrompt, naviAPI, chatHistory]);
+  }, [input, isStreaming, sendMessage, messages, systemPrompt, naviAPI, displayMessages]);
 
   const saveAssistantMessage = useCallback(async (messageId: string, content: string) => {
     try {
@@ -419,11 +445,34 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
         console.warn('[Navi.EXE] ⚠️ Skipping save - empty content');
         return;
       }
-      console.log('[Navi.EXE] 💾 FULLPERSIST v5: Saving complete AI response');
+      console.log('[Navi.EXE] 💾 FULLPERSIST v6: Saving complete AI response');
       console.log('[Navi.EXE] Message ID:', messageId);
       console.log('[Navi.EXE] FULL content length:', content.length, 'characters');
       
       const fullContent = content.trim();
+      const assistantTimestamp = new Date().toISOString();
+      const assistantMsgId = `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      setDisplayMessages(prev => {
+        const existingAssistantIdx = prev.findIndex(m => m.id === messageId || m.id.startsWith('streaming-'));
+        if (existingAssistantIdx >= 0) {
+          const updated = [...prev];
+          updated[existingAssistantIdx] = {
+            id: assistantMsgId,
+            role: 'assistant' as const,
+            content: fullContent,
+            timestamp: assistantTimestamp,
+          };
+          return updated;
+        }
+        return [...prev, {
+          id: assistantMsgId,
+          role: 'assistant' as const,
+          content: fullContent,
+          timestamp: assistantTimestamp,
+        }];
+      });
+      
       const savedMsg = await naviAPI.conversations.save({
         role: 'assistant',
         content: fullContent,
@@ -433,11 +482,11 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
           contentLength: fullContent.length,
           wasTruncated: false,
           messageId: messageId,
-          timestamp: new Date().toISOString(),
+          timestamp: assistantTimestamp,
         },
       });
       
-      console.log('[Navi.EXE] ✅ FULLPERSIST v5: AI response saved successfully');
+      console.log('[Navi.EXE] ✅ FULLPERSIST v6: AI response saved successfully');
       console.log('[Navi.EXE] Saved message ID:', savedMsg.id);
       console.log('[Navi.EXE] Saved content length:', savedMsg.content.length, 'characters');
       
@@ -511,7 +560,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
         });
       
       streamingCheckTimerRef.current = null;
-    }, 1200);
+    }, 800);
   }, [messages, saveAssistantMessage]);
   
   useEffect(() => {
@@ -890,21 +939,18 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
   }, []);
 
   useEffect(() => {
-    if (!autoSpeak || messages.length === 0 || isStreaming) return;
+    if (!autoSpeak || isStreaming) return;
     
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage.role !== 'assistant') return;
-    
-    const textParts = lastMessage.parts?.filter(p => p.type === 'text' && 'text' in p) || [];
-    const fullText = textParts.map(p => (p as any).text).join('');
-    
-    if (fullText && lastMessage.id !== currentlyPlayingId) {
-      const timer = setTimeout(() => {
-        speakText(fullText, lastMessage.id);
-      }, 500);
-      return () => clearTimeout(timer);
+    if (displayMessages.length > 0) {
+      const lastDisplayMsg = displayMessages[displayMessages.length - 1];
+      if (lastDisplayMsg.role === 'assistant' && lastDisplayMsg.id !== currentlyPlayingId) {
+        const timer = setTimeout(() => {
+          speakText(lastDisplayMsg.content, lastDisplayMsg.id);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [messages, autoSpeak, isStreaming, speakText, currentlyPlayingId]);
+  }, [displayMessages, autoSpeak, isStreaming, speakText, currentlyPlayingId]);
 
   return (
     <View style={styles.backgroundWrapper}>
@@ -948,7 +994,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
           onScroll={handleScroll}
           scrollEventThrottle={400}
         >
-          {messages.length === 0 && chatHistory.length === 0 && isLoaded ? (
+          {messages.length === 0 && displayMessages.length === 0 && isLoaded ? (
             <View style={styles.emptyState}>
               <Sparkle size={48} color="#cbd5e1" />
               <Text style={styles.emptyTitle}>Welcome, Operator!</Text>
@@ -984,63 +1030,58 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
             </View>
           ) : (
             <>
-              {chatHistory.length > 0 && messages.length === 0 && (
-                <View style={styles.historyDivider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>Previous conversation</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-              )}
-              
-              {chatHistory.map((histMsg, idx) => (
-                <View key={`history-${histMsg.id}-${idx}`} style={{ width: '100%' }}>
-                  {histMsg.role === 'assistant' ? (
-                    <View style={[styles.messageCard, styles.assistantMessage]}>
-                      <View style={styles.aiIcon}>
-                        <Sparkle size={16} color="#6366f1" fill="#6366f1" />
-                      </View>
-                      <View style={styles.messageContent}>
-                        <Text style={[styles.messageText, styles.assistantMessageText]}>
-                          {histMsg.full_output || histMsg.content}
-                        </Text>
-                        <TouchableOpacity
-                          style={styles.speakerButton}
-                          onPress={() => {
-                            if (currentlyPlayingId === `hist-${idx}`) {
-                              stopSpeaking();
-                            } else {
-                              speakText(histMsg.full_output || histMsg.content, `hist-${idx}`);
-                            }
-                          }}
-                        >
-                          {currentlyPlayingId === `hist-${idx}` ? (
-                            <VolumeX size={14} color="#ef4444" />
-                          ) : (
-                            <Volume2 size={14} color="#94a3b8" />
-                          )}
-                        </TouchableOpacity>
-                      </View>
+              {displayMessages.length > 0 && (
+                <>
+                  {displayMessages.map((histMsg, idx) => (
+                    <View key={`display-${histMsg.id}-${idx}`} style={{ width: '100%' }}>
+                      {histMsg.role === 'assistant' ? (
+                        <View style={[styles.messageCard, styles.assistantMessage]}>
+                          <View style={styles.aiIcon}>
+                            <Sparkle size={16} color="#6366f1" fill="#6366f1" />
+                          </View>
+                          <View style={styles.messageContent}>
+                            <Text style={[styles.messageText, styles.assistantMessageText]}>
+                              {histMsg.content}
+                            </Text>
+                            <TouchableOpacity
+                              style={styles.speakerButton}
+                              onPress={() => {
+                                if (currentlyPlayingId === `display-${idx}`) {
+                                  stopSpeaking();
+                                } else {
+                                  speakText(histMsg.content, `display-${idx}`);
+                                }
+                              }}
+                            >
+                              {currentlyPlayingId === `display-${idx}` ? (
+                                <VolumeX size={14} color="#ef4444" />
+                              ) : (
+                                <Volume2 size={14} color="#94a3b8" />
+                              )}
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ) : (
+                        <View style={[styles.messageCard, styles.userMessage]}>
+                          <Text style={[styles.messageText, styles.userMessageText]}>
+                            {histMsg.content}
+                          </Text>
+                        </View>
+                      )}
                     </View>
-                  ) : (
-                    <View style={[styles.messageCard, styles.userMessage]}>
-                      <Text style={[styles.messageText, styles.userMessageText]}>
-                        {histMsg.content}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              ))}
-              
-              {messages.length > 0 && chatHistory.length > 0 && (
-                <View style={styles.historyDivider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>Current session</Text>
-                  <View style={styles.dividerLine} />
-                </View>
+                  ))}
+                </>
               )}
             
               {messages
-                .filter((message) => message && message.id && message.role)
+                .filter((message) => {
+                  if (!message || !message.id || !message.role) return false;
+                  const isDuplicate = displayMessages.some(dm => 
+                    dm.role === message.role && 
+                    message.parts?.some((p: any) => p.type === 'text' && dm.content.includes(p.text?.substring(0, 50)))
+                  );
+                  return !isDuplicate;
+                })
                 .map((message, messageIndex) => {
                 const messageParts = Array.isArray(message.parts) ? message.parts : [];
                 
