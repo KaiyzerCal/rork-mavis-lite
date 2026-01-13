@@ -1,5 +1,5 @@
 import { useRorkAgent } from '@rork-ai/toolkit-sdk';
-import { Sparkle, Send, CheckCircle, XCircle, Target, Zap, Plus, Mic, MicOff } from 'lucide-react-native';
+import { Sparkle, Send, CheckCircle, XCircle, Target, Zap, Plus, Mic, MicOff, Volume2, VolumeX } from 'lucide-react-native';
 import { Audio } from 'expo-av';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -38,6 +38,10 @@ export default function NaviEXE() {
   const [proposedQuests, setProposedQuests] = useState<ProposedQuest[]>([]);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [autoSpeak, setAutoSpeak] = useState<boolean>(false);
+  const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
   const recordingRef = useRef<Audio.Recording | null>(null);
   const webMediaRecorderRef = useRef<MediaRecorder | null>(null);
   const webAudioChunksRef = useRef<Blob[]>([]);
@@ -756,6 +760,117 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     }
   }, [isRecording, startRecording, stopRecording]);
 
+  const speakText = useCallback(async (text: string, messageId: string) => {
+    try {
+      console.log('[TTS] Starting speech for message:', messageId);
+      setIsSpeaking(true);
+      setCurrentlyPlayingId(messageId);
+
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+
+      const cleanText = text
+        .replace(/[\*\#\`]/g, '')
+        .replace(/\n+/g, ' ')
+        .substring(0, 4000);
+
+      if (!cleanText.trim()) {
+        console.log('[TTS] No text to speak');
+        setIsSpeaking(false);
+        setCurrentlyPlayingId(null);
+        return;
+      }
+
+      if (Platform.OS === 'web') {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          utterance.onend = () => {
+            setIsSpeaking(false);
+            setCurrentlyPlayingId(null);
+          };
+          utterance.onerror = () => {
+            setIsSpeaking(false);
+            setCurrentlyPlayingId(null);
+          };
+          window.speechSynthesis.speak(utterance);
+        } else {
+          Alert.alert('Not Supported', 'Speech synthesis is not supported on this browser.');
+          setIsSpeaking(false);
+          setCurrentlyPlayingId(null);
+        }
+      } else {
+        const { speak, isSpeakingAsync } = await import('expo-speech');
+        const speaking = await isSpeakingAsync();
+        if (speaking) {
+          const Speech = await import('expo-speech');
+          await Speech.stop();
+        }
+        speak(cleanText, {
+          rate: 1.0,
+          pitch: 1.0,
+          onDone: () => {
+            setIsSpeaking(false);
+            setCurrentlyPlayingId(null);
+          },
+          onError: () => {
+            setIsSpeaking(false);
+            setCurrentlyPlayingId(null);
+          },
+        });
+      }
+
+      console.log('[TTS] Speech started successfully');
+    } catch (error) {
+      console.error('[TTS] Error:', error);
+      setIsSpeaking(false);
+      setCurrentlyPlayingId(null);
+    }
+  }, []);
+
+  const stopSpeaking = useCallback(async () => {
+    try {
+      if (Platform.OS === 'web') {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      } else {
+        const Speech = await import('expo-speech');
+        await Speech.stop();
+      }
+      if (soundRef.current) {
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+      setIsSpeaking(false);
+      setCurrentlyPlayingId(null);
+    } catch (error) {
+      console.error('[TTS] Stop error:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!autoSpeak || messages.length === 0 || isStreaming) return;
+    
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role !== 'assistant') return;
+    
+    const textParts = lastMessage.parts?.filter(p => p.type === 'text' && 'text' in p) || [];
+    const fullText = textParts.map(p => (p as any).text).join('');
+    
+    if (fullText && lastMessage.id !== currentlyPlayingId) {
+      const timer = setTimeout(() => {
+        speakText(fullText, lastMessage.id);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, autoSpeak, isStreaming, speakText, currentlyPlayingId]);
+
   return (
     <View style={styles.backgroundWrapper}>
       <KeyboardAvoidingView
@@ -853,6 +968,22 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
                         <Text style={[styles.messageText, styles.assistantMessageText]}>
                           {histMsg.full_output || histMsg.content}
                         </Text>
+                        <TouchableOpacity
+                          style={styles.speakerButton}
+                          onPress={() => {
+                            if (currentlyPlayingId === `hist-${idx}`) {
+                              stopSpeaking();
+                            } else {
+                              speakText(histMsg.full_output || histMsg.content, `hist-${idx}`);
+                            }
+                          }}
+                        >
+                          {currentlyPlayingId === `hist-${idx}` ? (
+                            <VolumeX size={14} color="#ef4444" />
+                          ) : (
+                            <Volume2 size={14} color="#94a3b8" />
+                          )}
+                        </TouchableOpacity>
                       </View>
                     </View>
                   ) : (
@@ -913,6 +1044,24 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
                             
                             return null;
                           })}
+                          <TouchableOpacity
+                            style={styles.speakerButton}
+                            onPress={() => {
+                              const textParts = messageParts.filter(p => p.type === 'text' && 'text' in p);
+                              const fullText = textParts.map(p => (p as any).text).join('');
+                              if (currentlyPlayingId === message.id) {
+                                stopSpeaking();
+                              } else {
+                                speakText(fullText, message.id);
+                              }
+                            }}
+                          >
+                            {currentlyPlayingId === message.id ? (
+                              <VolumeX size={14} color="#ef4444" />
+                            ) : (
+                              <Volume2 size={14} color="#94a3b8" />
+                            )}
+                          </TouchableOpacity>
                         </View>
                       </View>
                     )}
@@ -1056,6 +1205,27 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
         )}
 
         <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 10 }]}>
+          <View style={styles.voiceControlRow}>
+            <TouchableOpacity
+              style={[styles.autoSpeakButton, autoSpeak && styles.autoSpeakButtonActive]}
+              onPress={() => setAutoSpeak(!autoSpeak)}
+            >
+              {autoSpeak ? (
+                <Volume2 size={16} color="#ffffff" />
+              ) : (
+                <VolumeX size={16} color="#64748b" />
+              )}
+              <Text style={[styles.autoSpeakText, autoSpeak && styles.autoSpeakTextActive]}>
+                {autoSpeak ? 'Auto-speak ON' : 'Auto-speak OFF'}
+              </Text>
+            </TouchableOpacity>
+            {isSpeaking && (
+              <TouchableOpacity style={styles.stopSpeakButton} onPress={stopSpeaking}>
+                <VolumeX size={16} color="#ef4444" />
+                <Text style={styles.stopSpeakText}>Stop</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           <View style={styles.inputWrapper}>
             <TouchableOpacity
               style={[
@@ -1559,6 +1729,54 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ef4444',
     fontWeight: '500' as const,
+  },
+  speakerButton: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+  },
+  voiceControlRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  autoSpeakButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+  },
+  autoSpeakButtonActive: {
+    backgroundColor: '#6366f1',
+  },
+  autoSpeakText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#64748b',
+  },
+  autoSpeakTextActive: {
+    color: '#ffffff',
+  },
+  stopSpeakButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+  },
+  stopSpeakText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#ef4444',
   },
   toolOutput: {
     marginTop: 8,

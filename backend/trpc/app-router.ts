@@ -49,6 +49,10 @@ import editImageProcedure from "./routes/images/edit/route";
 import listImagesProcedure from "./routes/images/list/route";
 import getImageProcedure from "./routes/images/get/route";
 import deleteImageProcedure from "./routes/images/delete/route";
+import googleSearchProcedure from "./routes/integrations/google/search/route";
+import openaiChatProcedure from "./routes/integrations/openai/chat/route";
+import openaiEmbeddingProcedure from "./routes/integrations/openai/embedding/route";
+import ttsSpeakProcedure from "./routes/tts/speak/route";
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({
@@ -100,6 +104,7 @@ export const appRouter = createTRPCRouter({
       auth: googleAuthProcedure,
       getCalendarEvents: getCalendarEvents,
       createCalendarEvent: createCalendarEvent,
+      search: googleSearchProcedure,
     }),
     apple: createTRPCRouter({
       auth: appleAuthProcedure,
@@ -107,6 +112,13 @@ export const appRouter = createTRPCRouter({
       createCalendarEvent: createAppleCalendarEvent,
       syncCalendar: syncAppleCalendar,
     }),
+    openai: createTRPCRouter({
+      chat: openaiChatProcedure,
+      embedding: openaiEmbeddingProcedure,
+    }),
+  }),
+  tts: createTRPCRouter({
+    speak: ttsSpeakProcedure,
   }),
   analytics: createTRPCRouter({
     track: trackAnalyticsProcedure,
