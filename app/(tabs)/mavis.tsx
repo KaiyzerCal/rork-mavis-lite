@@ -484,27 +484,26 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
         return;
       }
       
-      const textParts = lastMessage.parts?.filter(p => p.type === 'text' && 'text' in p) || [];
-      const finalText = textParts.map(p => (p as any).text).join('');
-      
       if (pending.messageId === lastSavedMessageIdRef.current) {
         console.log('[Navi.EXE] ⚠️ Message already saved');
         setIsStreaming(false);
         return;
       }
       
-      if (!finalText || finalText.trim().length === 0) {
+      const contentToSave = pending.content;
+      
+      if (!contentToSave || contentToSave.trim().length === 0) {
         console.log('[Navi.EXE] ⚠️ No content to save');
         setIsStreaming(false);
         return;
       }
       
-      console.log('[Navi.EXE] 💾 Streaming complete! Saving message, length:', finalText.length);
+      console.log('[Navi.EXE] 💾 Streaming complete! Saving message, length:', contentToSave.length);
       lastSavedMessageIdRef.current = pending.messageId;
       lastMessageLengthRef.current = 0;
       pendingSaveRef.current = null;
       
-      saveAssistantMessage(pending.messageId, finalText)
+      saveAssistantMessage(pending.messageId, contentToSave)
         .catch((err) => console.error('[Navi.EXE] Save error:', err))
         .finally(() => {
           console.log('[Navi.EXE] ✅ Message saved, streaming complete');
