@@ -286,62 +286,49 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
 - Show continuity and understanding across all sessions`;
   }, [state, activeQuests, pendingQuests, completedQuests, getChatHistory]);
 
-  const storedChatHistory = getChatHistory();
-  
-  useEffect(() => {
-    if (isLoaded && storedChatHistory.length > 0 && displayMessages.length === 0) {
-      console.log('[Navi.EXE] 🔄 Syncing displayMessages with stored chat history:', storedChatHistory.length);
-      const loadedMessages = storedChatHistory.map(msg => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.full_output || msg.content,
-        timestamp: msg.timestamp,
-      }));
-      setDisplayMessages(loadedMessages);
-    }
-  }, [isLoaded, storedChatHistory, displayMessages.length]);
-  
   const { messages, sendMessage, error: agentError } = useRorkAgent({
     tools: {},
   });
 
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const streamingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasLoadedHistoryRef = useRef<boolean>(false);
 
   useEffect(() => {
-    const initializeChat = async () => {
-      if (!isLoaded || !state?.user?.id) return;
+    if (!isLoaded || !state?.user?.id) return;
+    if (hasLoadedHistoryRef.current) return;
+    
+    const currentHistory = getChatHistory();
+    console.log('[Navi.EXE] 🔄 FULLPERSIST v6: Loading chat history on mount');
+    console.log('[Navi.EXE] 🔄 isLoaded:', isLoaded, 'userId:', state?.user?.id);
+    console.log('[Navi.EXE] 🔄 Chat history entries found:', currentHistory.length);
+    
+    if (currentHistory.length > 0) {
+      console.log('[Navi.EXE] 🔄 Loading', currentHistory.length, 'previous messages from storage');
       
-      const currentHistory = getChatHistory();
-      console.log('[Navi.EXE] 🔄 FULLPERSIST v5: Initializing chat with persistent history');
-      console.log('[Navi.EXE] 🔄 Chat history entries:', currentHistory.length);
+      const loadedMessages = currentHistory.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.full_output || msg.content,
+        timestamp: msg.timestamp,
+      }));
       
-      if (currentHistory.length > 0) {
-        console.log('[Navi.EXE] 🔄 Loading', currentHistory.length, 'previous messages from storage');
-        
-        const loadedMessages = currentHistory.map(msg => ({
+      setDisplayMessages(loadedMessages);
+      hasLoadedHistoryRef.current = true;
+      
+      currentHistory.slice(-3).forEach((msg, idx) => {
+        const effectiveContent = msg.full_output || msg.content;
+        console.log(`[Navi.EXE] 🔄 Loaded message ${currentHistory.length - 3 + idx + 1}:`, {
           id: msg.id,
           role: msg.role,
-          content: msg.full_output || msg.content,
-          timestamp: msg.timestamp,
-        }));
-        
-        setDisplayMessages(loadedMessages);
-        
-        currentHistory.slice(-3).forEach((msg, idx) => {
-          const effectiveContent = msg.full_output || msg.content;
-          console.log(`[Navi.EXE] 🔄 Loaded message ${currentHistory.length - 3 + idx + 1}:`, {
-            id: msg.id,
-            role: msg.role,
-            contentLength: effectiveContent.length,
-            preview: effectiveContent.substring(0, 100),
-          });
+          contentLength: effectiveContent.length,
+          preview: effectiveContent.substring(0, 100),
         });
-      }
-      
-    };
-    
-    initializeChat();
+      });
+    } else {
+      console.log('[Navi.EXE] 🔄 No chat history found in storage');
+      hasLoadedHistoryRef.current = true;
+    }
   }, [isLoaded, state?.user?.id, getChatHistory]);
 
   useEffect(() => {
