@@ -183,7 +183,21 @@ export type NaviAvatarStyle =
   | 'spirit_flame'
   | 'spirit_ice'
   | 'assassin'
-  | 'paladin';
+  | 'paladin'
+  | 'animal_dolphin'
+  | 'animal_seahorse'
+  | 'animal_turtle'
+  | 'animal_fox'
+  | 'animal_lion'
+  | 'animal_tiger'
+  | 'animal_bear'
+  | 'animal_butterfly'
+  | 'animal_dragonfly'
+  | 'animal_bull'
+  | 'animal_shark'
+  | 'animal_tarantula'
+  | 'animal_phoenix'
+  | 'animal_snake';
 
 export interface NaviProfile {
   id: string;

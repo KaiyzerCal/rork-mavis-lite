@@ -253,43 +253,54 @@ export const [NaviAPIProvider, useNaviAPI] = createContextHook((): NaviDatabaseA
   
   const conversationsAPI = {
     save: async (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
-      console.log('[NaviAPI] Saving conversation to backend...', { role: message.role, contentLength: message.content.length });
+      const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const timestamp = new Date().toISOString();
+      const effectiveContent = message.full_output || message.content || '';
+      
+      console.log('[NaviAPI] 💾 Saving conversation...', { 
+        role: message.role, 
+        contentLength: message.content?.length || 0,
+        fullOutputLength: message.full_output?.length || 0,
+        effectiveLength: effectiveContent.length,
+        messageId,
+      });
+      
+      const fullMessage: ChatMessage = {
+        id: messageId,
+        role: message.role,
+        content: effectiveContent,
+        full_output: effectiveContent,
+        timestamp: timestamp,
+        output_tokens: message.output_tokens || effectiveContent.length,
+        is_summary: message.is_summary || false,
+        metadata: {
+          ...message.metadata,
+          savedAt: timestamp,
+          contentLength: effectiveContent.length,
+          wasTruncated: false,
+        },
+      };
+      
+      saveChatMessage(fullMessage);
+      console.log('[NaviAPI] ✅ Message saved locally with ID:', messageId);
       
       try {
         const result = await conversationSaveMutation.mutateAsync({
           userId,
           role: message.role === 'user' ? 'user' : 'assistant',
-          content: message.content,
-          fullOutput: message.full_output,
-          metadata: message.metadata,
+          content: effectiveContent,
+          fullOutput: effectiveContent,
+          metadata: fullMessage.metadata,
         });
         
-        console.log('[NaviAPI] Conversation saved to backend:', result.id);
-        
-        const fullMessage: ChatMessage = {
-          id: result.id,
-          role: result.role as 'user' | 'assistant',
-          content: result.content,
-          full_output: result.full_output,
-          timestamp: result.timestamp,
-          metadata: result.metadata,
-        };
-        
-        saveChatMessage(fullMessage);
-        
-        return fullMessage;
+        console.log('[NaviAPI] ✅ Message also synced to backend:', result.id);
       } catch (error) {
         if (!isNetworkError(error)) {
-          console.log('[NaviAPI] Failed to save to backend, saving locally only');
+          console.log('[NaviAPI] ⚠️ Backend sync failed, message saved locally only');
         }
-        const fullMessage: ChatMessage = {
-          ...message,
-          id: `msg-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-        };
-        saveChatMessage(fullMessage);
-        return fullMessage;
       }
+      
+      return fullMessage;
     },
     load: async (threadId?: string, limit?: number) => {
       console.log('[NaviAPI] Loading conversations from backend...');

@@ -27,7 +27,21 @@ export type NaviAvatarStyle =
   | 'spirit_flame'
   | 'spirit_ice'
   | 'assassin'
-  | 'paladin';
+  | 'paladin'
+  | 'animal_dolphin'
+  | 'animal_seahorse'
+  | 'animal_turtle'
+  | 'animal_fox'
+  | 'animal_lion'
+  | 'animal_tiger'
+  | 'animal_bear'
+  | 'animal_butterfly'
+  | 'animal_dragonfly'
+  | 'animal_bull'
+  | 'animal_shark'
+  | 'animal_tarantula'
+  | 'animal_phoenix'
+  | 'animal_snake';
 
 interface NaviAvatarProps {
   type?: string;
@@ -424,6 +438,344 @@ export default function NaviAvatar({
             <Circle cx="50" cy="60" r="3" fill={backgroundColor} />
             <Rect x="40" y="74" width="20" height="4" rx="1" fill={secondaryColor} />
             <Rect x="42" y="82" width="16" height="3" rx="1" fill={secondaryColor} opacity={0.7} />
+          </G>
+        );
+
+      case 'animal_dolphin':
+        return (
+          <G>
+            {/* Friendly dolphin */}
+            <Ellipse cx="50" cy="45" rx="28" ry="22" fill={primaryColor} />
+            <Path d="M22 45 Q15 35 25 30 Q20 40 25 45" fill={primaryColor} />
+            <Path d="M78 45 Q85 40 82 50 L78 48" fill={primaryColor} />
+            <Path d="M50 25 Q55 15 60 20 Q55 25 55 30" fill={secondaryColor} />
+            <Ellipse cx="50" cy="42" rx="22" ry="16" fill={backgroundColor} opacity={0.4} />
+            <Circle cx="35" cy="40" r="5" fill={backgroundColor} />
+            <Circle cx="35" cy="39" r="2.5" fill="#1f2937" />
+            <Circle cx="34" cy="38" r="1" fill="#ffffff" />
+            <Path d="M45 52 Q50 56 55 52" stroke={secondaryColor} strokeWidth="2" fill="none" />
+            <Ellipse cx="50" cy="72" rx="15" ry="18" fill={primaryColor} />
+            <Path d="M35 85 Q30 95 25 90 Q35 88 38 82" fill={secondaryColor} />
+            <Path d="M65 85 Q70 95 75 90 Q65 88 62 82" fill={secondaryColor} />
+            <Ellipse cx="50" cy="70" rx="10" ry="12" fill={backgroundColor} opacity={0.3} />
+          </G>
+        );
+
+      case 'animal_seahorse':
+        return (
+          <G>
+            {/* Elegant seahorse */}
+            <Path d="M50 10 Q60 15 55 25 Q50 20 50 10" fill={secondaryColor} />
+            <Ellipse cx="50" cy="32" rx="14" ry="16" fill={primaryColor} />
+            <Circle cx="50" cy="30" r="11" fill={backgroundColor} />
+            <Circle cx="45" cy="28" r="4" fill={primaryColor} />
+            <Circle cx="45" cy="27" r="2" fill="#1f2937" />
+            <Circle cx="44" cy="26" r="0.8" fill="#ffffff" />
+            <Path d="M52 35 Q55 38 52 40" fill={primaryColor} />
+            <Ellipse cx="50" cy="55" rx="12" ry="18" fill={primaryColor} />
+            <Path d="M38 55 Q32 50 35 45 Q40 50 40 55" fill={secondaryColor} opacity={0.6} />
+            <Path d="M50 73 Q55 80 50 90 Q45 85 48 78 Q42 85 45 92" fill={primaryColor} />
+            <Ellipse cx="50" cy="58" rx="8" ry="12" fill={backgroundColor} opacity={0.3} />
+            <Path d="M42 50 L42 65" stroke={secondaryColor} strokeWidth="1.5" opacity={0.5} />
+            <Path d="M50 48 L50 68" stroke={secondaryColor} strokeWidth="1.5" opacity={0.5} />
+            <Path d="M58 50 L58 65" stroke={secondaryColor} strokeWidth="1.5" opacity={0.5} />
+          </G>
+        );
+
+      case 'animal_turtle':
+        return (
+          <G>
+            {/* Wise turtle */}
+            <Ellipse cx="50" cy="55" rx="30" ry="25" fill={primaryColor} />
+            <Ellipse cx="50" cy="52" rx="26" ry="20" fill={secondaryColor} />
+            <Path d="M30 45 L40 35 L50 45 L60 35 L70 45 L65 55 L50 60 L35 55 Z" fill={primaryColor} opacity={0.8} />
+            <Polygon points="50,38 58,45 58,55 50,60 42,55 42,45" fill={secondaryColor} opacity={0.6} />
+            <Ellipse cx="35" cy="35" rx="10" ry="12" fill={primaryColor} />
+            <Circle cx="35" cy="32" r="8" fill={backgroundColor} />
+            <Circle cx="32" cy="30" r="3" fill={primaryColor} />
+            <Circle cx="38" cy="30" r="3" fill={primaryColor} />
+            <Circle cx="32" cy="29" r="1.5" fill="#1f2937" />
+            <Circle cx="38" cy="29" r="1.5" fill="#1f2937" />
+            <Path d="M33 38 Q35 40 37 38" stroke={primaryColor} strokeWidth="1" fill="none" />
+            <Ellipse cx="22" cy="60" rx="8" ry="6" fill={primaryColor} />
+            <Ellipse cx="78" cy="60" rx="8" ry="6" fill={primaryColor} />
+            <Ellipse cx="35" cy="78" rx="7" ry="5" fill={primaryColor} />
+            <Ellipse cx="65" cy="78" rx="7" ry="5" fill={primaryColor} />
+            <Ellipse cx="50" cy="82" rx="5" ry="4" fill={primaryColor} />
+          </G>
+        );
+
+      case 'animal_fox':
+        return (
+          <G>
+            {/* Clever fox */}
+            <Path d="M25 35 L35 8 L42 30" fill={primaryColor} />
+            <Path d="M75 35 L65 8 L58 30" fill={primaryColor} />
+            <Path d="M28 30 L36 12 L40 28" fill={secondaryColor} opacity={0.6} />
+            <Path d="M72 30 L64 12 L60 28" fill={secondaryColor} opacity={0.6} />
+            <Ellipse cx="50" cy="42" rx="22" ry="20" fill={primaryColor} />
+            <Ellipse cx="50" cy="48" rx="12" ry="10" fill={backgroundColor} />
+            <Ellipse cx="40" cy="38" rx="6" ry="7" fill={backgroundColor} />
+            <Ellipse cx="60" cy="38" rx="6" ry="7" fill={backgroundColor} />
+            <Ellipse cx="40" cy="37" rx="3" ry="4" fill="#1f2937" />
+            <Ellipse cx="60" cy="37" rx="3" ry="4" fill="#1f2937" />
+            <Circle cx="39" cy="36" r="1" fill="#ffffff" />
+            <Circle cx="59" cy="36" r="1" fill="#ffffff" />
+            <Ellipse cx="50" cy="50" rx="5" ry="3" fill="#1f2937" />
+            <Path d="M45 54 L50 58 L55 54" stroke={primaryColor} strokeWidth="1.5" fill="none" />
+            <Ellipse cx="50" cy="75" rx="18" ry="20" fill={primaryColor} />
+            <Ellipse cx="50" cy="72" rx="12" ry="14" fill={backgroundColor} />
+            <Path d="M40 68 L50 62 L60 68" stroke={secondaryColor} strokeWidth="2" fill="none" />
+          </G>
+        );
+
+      case 'animal_lion':
+        return (
+          <G>
+            {/* Majestic lion */}
+            <Circle cx="50" cy="45" r="35" fill={secondaryColor} />
+            <Circle cx="50" cy="45" r="28" fill={primaryColor} />
+            <Ellipse cx="50" cy="48" rx="20" ry="18" fill={primaryColor} />
+            <Circle cx="50" cy="45" r="16" fill={backgroundColor} />
+            <Path d="M25 30 Q30 20 40 25" stroke={secondaryColor} strokeWidth="4" fill="none" />
+            <Path d="M75 30 Q70 20 60 25" stroke={secondaryColor} strokeWidth="4" fill="none" />
+            <Ellipse cx="42" cy="42" rx="5" ry="6" fill={primaryColor} />
+            <Ellipse cx="58" cy="42" rx="5" ry="6" fill={primaryColor} />
+            <Ellipse cx="42" cy="41" rx="2.5" ry="3" fill="#92400e" />
+            <Ellipse cx="58" cy="41" rx="2.5" ry="3" fill="#92400e" />
+            <Circle cx="41" cy="40" r="1" fill="#ffffff" />
+            <Circle cx="57" cy="40" r="1" fill="#ffffff" />
+            <Ellipse cx="50" cy="52" rx="6" ry="4" fill={primaryColor} />
+            <Ellipse cx="50" cy="54" rx="3" ry="2" fill="#1f2937" />
+            <Path d="M44 58 L50 62 L56 58" stroke={primaryColor} strokeWidth="2" fill="none" />
+            <Path d="M42 60 L44 58 M56 58 L58 60" stroke={primaryColor} strokeWidth="1.5" />
+            <Ellipse cx="50" cy="80" rx="14" ry="12" fill={primaryColor} />
+          </G>
+        );
+
+      case 'animal_tiger':
+        return (
+          <G>
+            {/* Fierce tiger */}
+            <Path d="M28 30 L35 10 L42 28" fill={primaryColor} />
+            <Path d="M72 30 L65 10 L58 28" fill={primaryColor} />
+            <Ellipse cx="50" cy="42" rx="24" ry="22" fill={primaryColor} />
+            <Circle cx="50" cy="40" r="17" fill={backgroundColor} />
+            <Path d="M30 35 L38 38" stroke="#1f2937" strokeWidth="3" />
+            <Path d="M32 42 L40 43" stroke="#1f2937" strokeWidth="2" />
+            <Path d="M70 35 L62 38" stroke="#1f2937" strokeWidth="3" />
+            <Path d="M68 42 L60 43" stroke="#1f2937" strokeWidth="2" />
+            <Ellipse cx="42" cy="38" rx="5" ry="6" fill={primaryColor} />
+            <Ellipse cx="58" cy="38" rx="5" ry="6" fill={primaryColor} />
+            <Ellipse cx="42" cy="37" rx="2.5" ry="3" fill="#fbbf24" />
+            <Ellipse cx="58" cy="37" rx="2.5" ry="3" fill="#fbbf24" />
+            <Circle cx="42" cy="36" r="1.5" fill="#1f2937" />
+            <Circle cx="58" cy="36" r="1.5" fill="#1f2937" />
+            <Ellipse cx="50" cy="48" rx="5" ry="3" fill={primaryColor} />
+            <Ellipse cx="50" cy="50" rx="3" ry="2" fill="#fca5a5" />
+            <Path d="M44 54 L50 58 L56 54" stroke={primaryColor} strokeWidth="2" fill="none" />
+            <Ellipse cx="50" cy="78" rx="16" ry="18" fill={primaryColor} />
+            <Path d="M40 72 L50 68 L60 72" stroke="#1f2937" strokeWidth="2" fill="none" />
+            <Path d="M42 80 L50 76 L58 80" stroke="#1f2937" strokeWidth="2" fill="none" />
+          </G>
+        );
+
+      case 'animal_bear':
+        return (
+          <G>
+            {/* Friendly bear */}
+            <Circle cx="30" cy="22" r="12" fill={primaryColor} />
+            <Circle cx="70" cy="22" r="12" fill={primaryColor} />
+            <Circle cx="30" cy="22" r="7" fill={secondaryColor} />
+            <Circle cx="70" cy="22" r="7" fill={secondaryColor} />
+            <Ellipse cx="50" cy="42" rx="26" ry="24" fill={primaryColor} />
+            <Circle cx="50" cy="40" r="18" fill={backgroundColor} />
+            <Ellipse cx="42" cy="38" rx="5" ry="6" fill={primaryColor} />
+            <Ellipse cx="58" cy="38" rx="5" ry="6" fill={primaryColor} />
+            <Circle cx="42" cy="37" r="2.5" fill="#1f2937" />
+            <Circle cx="58" cy="37" r="2.5" fill="#1f2937" />
+            <Circle cx="41" cy="36" r="1" fill="#ffffff" />
+            <Circle cx="57" cy="36" r="1" fill="#ffffff" />
+            <Ellipse cx="50" cy="48" rx="8" ry="6" fill={secondaryColor} />
+            <Ellipse cx="50" cy="50" rx="4" ry="3" fill="#1f2937" />
+            <Path d="M46 54 Q50 58 54 54" stroke={primaryColor} strokeWidth="1.5" fill="none" />
+            <Ellipse cx="50" cy="78" rx="20" ry="18" fill={primaryColor} />
+            <Ellipse cx="50" cy="76" rx="14" ry="12" fill={secondaryColor} opacity={0.4} />
+          </G>
+        );
+
+      case 'animal_butterfly':
+        return (
+          <G>
+            {/* Graceful butterfly */}
+            <Path d="M20 35 Q10 25 15 15 Q25 20 30 35 Q25 45 20 35" fill={primaryColor} />
+            <Path d="M80 35 Q90 25 85 15 Q75 20 70 35 Q75 45 80 35" fill={primaryColor} />
+            <Path d="M25 32 Q18 25 22 18 Q28 22 32 32" fill={secondaryColor} opacity={0.6} />
+            <Path d="M75 32 Q82 25 78 18 Q72 22 68 32" fill={secondaryColor} opacity={0.6} />
+            <Circle cx="25" cy="28" r="4" fill={backgroundColor} opacity={0.5} />
+            <Circle cx="75" cy="28" r="4" fill={backgroundColor} opacity={0.5} />
+            <Path d="M25 55 Q15 65 20 80 Q30 70 35 55 Q30 50 25 55" fill={primaryColor} />
+            <Path d="M75 55 Q85 65 80 80 Q70 70 65 55 Q70 50 75 55" fill={primaryColor} />
+            <Path d="M28 60 Q22 68 25 75 Q32 68 35 58" fill={secondaryColor} opacity={0.6} />
+            <Path d="M72 60 Q78 68 75 75 Q68 68 65 58" fill={secondaryColor} opacity={0.6} />
+            <Ellipse cx="50" cy="50" rx="8" ry="35" fill={secondaryColor} />
+            <Ellipse cx="50" cy="50" rx="5" ry="30" fill={primaryColor} />
+            <Circle cx="50" cy="18" r="6" fill={primaryColor} />
+            <Circle cx="50" cy="18" r="4" fill={backgroundColor} />
+            <Circle cx="48" cy="17" r="1.5" fill="#1f2937" />
+            <Circle cx="52" cy="17" r="1.5" fill="#1f2937" />
+            <Path d="M45 8 Q48 5 50 10" stroke={secondaryColor} strokeWidth="1.5" fill="none" />
+            <Path d="M55 8 Q52 5 50 10" stroke={secondaryColor} strokeWidth="1.5" fill="none" />
+          </G>
+        );
+
+      case 'animal_dragonfly':
+        return (
+          <G>
+            {/* Elegant dragonfly */}
+            <Ellipse cx="50" cy="25" rx="14" ry="12" fill={primaryColor} />
+            <Circle cx="50" cy="24" r="10" fill={backgroundColor} />
+            <Circle cx="45" cy="22" r="5" fill={primaryColor} />
+            <Circle cx="55" cy="22" r="5" fill={primaryColor} />
+            <Circle cx="45" cy="21" r="3" fill="#06b6d4" />
+            <Circle cx="55" cy="21" r="3" fill="#06b6d4" />
+            <Circle cx="44" cy="20" r="1" fill="#ffffff" />
+            <Circle cx="54" cy="20" r="1" fill="#ffffff" />
+            <Path d="M15 30 Q30 20 45 30 Q30 35 20 32" fill={primaryColor} opacity={0.7} />
+            <Path d="M85 30 Q70 20 55 30 Q70 35 80 32" fill={primaryColor} opacity={0.7} />
+            <Path d="M20 28 Q32 22 42 28" stroke={secondaryColor} strokeWidth="1" fill="none" />
+            <Path d="M80 28 Q68 22 58 28" stroke={secondaryColor} strokeWidth="1" fill="none" />
+            <Path d="M18 45 Q32 38 48 45 Q32 50 22 48" fill={primaryColor} opacity={0.6} />
+            <Path d="M82 45 Q68 38 52 45 Q68 50 78 48" fill={primaryColor} opacity={0.6} />
+            <Ellipse cx="50" cy="55" rx="6" ry="20" fill={secondaryColor} />
+            <Ellipse cx="50" cy="55" rx="4" ry="18" fill={primaryColor} />
+            <Ellipse cx="50" cy="80" rx="4" ry="12" fill={secondaryColor} />
+            <Ellipse cx="50" cy="80" rx="2.5" ry="10" fill={primaryColor} />
+            <Path d="M46 45 L46 70" stroke={secondaryColor} strokeWidth="1" opacity={0.5} />
+            <Path d="M54 45 L54 70" stroke={secondaryColor} strokeWidth="1" opacity={0.5} />
+          </G>
+        );
+
+      case 'animal_bull':
+        return (
+          <G>
+            {/* Powerful bull */}
+            <Path d="M15 35 Q10 25 20 20 L30 30" fill={primaryColor} />
+            <Path d="M85 35 Q90 25 80 20 L70 30" fill={primaryColor} />
+            <Path d="M18 32 Q15 26 22 23" stroke={secondaryColor} strokeWidth="3" fill="none" />
+            <Path d="M82 32 Q85 26 78 23" stroke={secondaryColor} strokeWidth="3" fill="none" />
+            <Ellipse cx="50" cy="45" rx="28" ry="24" fill={primaryColor} />
+            <Circle cx="50" cy="42" r="18" fill={backgroundColor} />
+            <Ellipse cx="40" cy="38" rx="5" ry="6" fill={primaryColor} />
+            <Ellipse cx="60" cy="38" rx="5" ry="6" fill={primaryColor} />
+            <Ellipse cx="40" cy="37" rx="2.5" ry="3" fill="#1f2937" />
+            <Ellipse cx="60" cy="37" rx="2.5" ry="3" fill="#1f2937" />
+            <Circle cx="39" cy="36" r="1" fill="#ffffff" />
+            <Circle cx="59" cy="36" r="1" fill="#ffffff" />
+            <Ellipse cx="50" cy="52" rx="10" ry="7" fill={secondaryColor} />
+            <Circle cx="45" cy="52" r="2" fill="#1f2937" />
+            <Circle cx="55" cy="52" r="2" fill="#1f2937" />
+            <Ellipse cx="50" cy="78" rx="18" ry="16" fill={primaryColor} />
+            <Path d="M40 72 L50 68 L60 72" stroke={secondaryColor} strokeWidth="2" fill="none" />
+            <Ellipse cx="50" cy="75" rx="12" ry="10" fill={secondaryColor} opacity={0.3} />
+          </G>
+        );
+
+      case 'animal_shark':
+        return (
+          <G>
+            {/* Fierce shark */}
+            <Path d="M50 15 Q58 8 55 20 L50 25" fill={secondaryColor} />
+            <Ellipse cx="50" cy="45" rx="32" ry="22" fill={primaryColor} />
+            <Path d="M18 45 Q10 40 15 50 L22 48" fill={primaryColor} />
+            <Path d="M82 45 Q90 42 88 52 L80 48" fill={primaryColor} />
+            <Ellipse cx="50" cy="50" rx="25" ry="15" fill={backgroundColor} opacity={0.4} />
+            <Circle cx="35" cy="40" r="5" fill={backgroundColor} />
+            <Circle cx="35" cy="39" r="2.5" fill="#1f2937" />
+            <Circle cx="34" cy="38" r="1" fill="#ffffff" />
+            <Path d="M55 52 Q60 50 65 52 Q60 58 55 55" fill={backgroundColor} />
+            <Path d="M42 58 L45 55 L48 58 L51 55 L54 58 L57 55 L60 58" stroke={backgroundColor} strokeWidth="2" fill="none" />
+            <Ellipse cx="50" cy="75" rx="15" ry="18" fill={primaryColor} />
+            <Path d="M35 88 Q30 95 25 92 Q32 90 36 85" fill={secondaryColor} />
+            <Path d="M65 88 Q70 95 75 92 Q68 90 64 85" fill={secondaryColor} />
+          </G>
+        );
+
+      case 'animal_tarantula':
+        return (
+          <G>
+            {/* Mysterious tarantula */}
+            <Ellipse cx="50" cy="55" rx="22" ry="18" fill={primaryColor} />
+            <Ellipse cx="50" cy="30" rx="14" ry="12" fill={primaryColor} />
+            <Circle cx="44" cy="28" r="4" fill="#1f2937" />
+            <Circle cx="56" cy="28" r="4" fill="#1f2937" />
+            <Circle cx="44" cy="27" r="2" fill="#dc2626" />
+            <Circle cx="56" cy="27" r="2" fill="#dc2626" />
+            <Circle cx="40" cy="32" r="2" fill="#1f2937" />
+            <Circle cx="60" cy="32" r="2" fill="#1f2937" />
+            <Path d="M42 38 Q44 35 46 38" fill={secondaryColor} />
+            <Path d="M54 38 Q56 35 58 38" fill={secondaryColor} />
+            <Path d="M20 35 Q15 25 25 30 L32 40" stroke={primaryColor} strokeWidth="4" fill="none" />
+            <Path d="M80 35 Q85 25 75 30 L68 40" stroke={primaryColor} strokeWidth="4" fill="none" />
+            <Path d="M15 50 Q8 42 18 45 L30 52" stroke={primaryColor} strokeWidth="4" fill="none" />
+            <Path d="M85 50 Q92 42 82 45 L70 52" stroke={primaryColor} strokeWidth="4" fill="none" />
+            <Path d="M18 65 Q10 60 20 58 L32 62" stroke={primaryColor} strokeWidth="4" fill="none" />
+            <Path d="M82 65 Q90 60 80 58 L68 62" stroke={primaryColor} strokeWidth="4" fill="none" />
+            <Path d="M25 78 Q18 75 25 70 L35 72" stroke={primaryColor} strokeWidth="4" fill="none" />
+            <Path d="M75 78 Q82 75 75 70 L65 72" stroke={primaryColor} strokeWidth="4" fill="none" />
+            <Ellipse cx="50" cy="55" rx="15" ry="12" fill={secondaryColor} opacity={0.4} />
+          </G>
+        );
+
+      case 'animal_phoenix':
+        return (
+          <G>
+            {/* Majestic phoenix */}
+            <Path d="M50 5 Q55 -5 60 10 Q55 15 50 12 Q45 15 40 10 Q45 -5 50 5" fill={secondaryColor} />
+            <Path d="M40 12 Q35 5 45 10" fill={primaryColor} />
+            <Path d="M60 12 Q65 5 55 10" fill={primaryColor} />
+            <Ellipse cx="50" cy="35" rx="18" ry="16" fill={primaryColor} />
+            <Circle cx="50" cy="33" r="12" fill={backgroundColor} />
+            <Ellipse cx="44" cy="31" rx="4" ry="5" fill={primaryColor} />
+            <Ellipse cx="56" cy="31" rx="4" ry="5" fill={primaryColor} />
+            <Circle cx="44" cy="30" r="2" fill="#f59e0b" />
+            <Circle cx="56" cy="30" r="2" fill="#f59e0b" />
+            <Circle cx="43" cy="29" r="0.8" fill="#ffffff" />
+            <Circle cx="55" cy="29" r="0.8" fill="#ffffff" />
+            <Path d="M48 40 L50 42 L52 40" stroke={primaryColor} strokeWidth="1.5" fill="none" />
+            <Path d="M20 40 Q30 30 40 40 Q30 50 25 55" fill={secondaryColor} opacity={0.8} />
+            <Path d="M80 40 Q70 30 60 40 Q70 50 75 55" fill={secondaryColor} opacity={0.8} />
+            <Path d="M25 38 Q32 32 38 38" stroke={primaryColor} strokeWidth="2" fill="none" />
+            <Path d="M75 38 Q68 32 62 38" stroke={primaryColor} strokeWidth="2" fill="none" />
+            <Ellipse cx="50" cy="65" rx="15" ry="20" fill={primaryColor} />
+            <Path d="M35 80 Q25 95 30 100 Q40 90 42 82" fill={secondaryColor} />
+            <Path d="M65 80 Q75 95 70 100 Q60 90 58 82" fill={secondaryColor} />
+            <Path d="M50 85 Q48 98 52 100 Q54 95 50 85" fill={secondaryColor} />
+            <Ellipse cx="50" cy="62" rx="10" ry="14" fill={secondaryColor} opacity={0.4} />
+          </G>
+        );
+
+      case 'animal_snake':
+        return (
+          <G>
+            {/* Wise snake */}
+            <Ellipse cx="50" cy="30" rx="16" ry="14" fill={primaryColor} />
+            <Circle cx="50" cy="28" r="11" fill={backgroundColor} />
+            <Ellipse cx="44" cy="26" rx="4" ry="5" fill={primaryColor} />
+            <Ellipse cx="56" cy="26" rx="4" ry="5" fill={primaryColor} />
+            <Ellipse cx="44" cy="25" rx="2" ry="2.5" fill="#fbbf24" />
+            <Ellipse cx="56" cy="25" rx="2" ry="2.5" fill="#fbbf24" />
+            <Circle cx="44" cy="24" r="1" fill="#1f2937" />
+            <Circle cx="56" cy="24" r="1" fill="#1f2937" />
+            <Path d="M48 35 L50 40 L52 35" stroke="#dc2626" strokeWidth="2" fill="none" />
+            <Path d="M50 44 Q30 50 25 70 Q22 85 35 90 Q45 85 50 70" fill={primaryColor} />
+            <Path d="M50 44 Q70 50 75 70 Q78 85 65 90 Q55 85 50 70" fill={primaryColor} />
+            <Path d="M50 70 Q50 80 50 95" stroke={primaryColor} strokeWidth="12" fill="none" />
+            <Ellipse cx="50" cy="60" rx="8" ry="12" fill={secondaryColor} opacity={0.4} />
+            <Path d="M30 65 Q35 60 40 65" stroke={secondaryColor} strokeWidth="2" fill="none" />
+            <Path d="M60 65 Q65 60 70 65" stroke={secondaryColor} strokeWidth="2" fill="none" />
+            <Path d="M35 75 Q40 70 45 75" stroke={secondaryColor} strokeWidth="2" fill="none" opacity={0.7} />
+            <Path d="M55 75 Q60 70 65 75" stroke={secondaryColor} strokeWidth="2" fill="none" opacity={0.7} />
           </G>
         );
 
