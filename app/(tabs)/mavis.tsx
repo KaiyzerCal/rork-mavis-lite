@@ -24,7 +24,6 @@ interface ChatMessageDisplay {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
-  saved?: boolean;
 }
 
 interface ProposedQuest {
@@ -74,35 +73,31 @@ export default function NaviEXE() {
     }
     
     if (messagesLoaded) {
-      console.log('[NaviChat] Messages already loaded, skipping');
       return;
     }
     
-    console.log('[NaviChat] App state loaded, loading chat history...');
+    console.log('[NaviChat] 🔄 App state loaded, loading chat history...');
     const storedHistory = getChatHistory();
-    console.log('[NaviChat] Found', storedHistory.length, 'messages in storage');
+    console.log('[NaviChat] 📖 Found', storedHistory.length, 'messages in storage');
     
     if (storedHistory.length > 0) {
       const loadedMessages: ChatMessageDisplay[] = storedHistory.map(msg => {
         const messageContent = msg.full_output || msg.content || '';
-        console.log(`[NaviChat] Loading message ${msg.id}:`, {
-          role: msg.role,
-          contentLength: messageContent.length,
-          preview: messageContent.substring(0, 50) + '...',
-        });
+        console.log(`[NaviChat] 📨 Message ${msg.id}: ${msg.role} - ${messageContent.length} chars`);
         return {
           id: msg.id,
           role: msg.role as 'user' | 'assistant',
           content: messageContent,
           timestamp: msg.timestamp,
-          saved: true,
         };
       });
       
       setChatMessages(loadedMessages);
-      console.log('[NaviChat] ✅ Loaded', loadedMessages.length, 'messages into chat');
-      console.log('[NaviChat] User messages:', loadedMessages.filter(m => m.role === 'user').length);
-      console.log('[NaviChat] Assistant messages:', loadedMessages.filter(m => m.role === 'assistant').length);
+      console.log('[NaviChat] ✅ Loaded', loadedMessages.length, 'messages');
+      console.log('[NaviChat] 👤 User:', loadedMessages.filter(m => m.role === 'user').length);
+      console.log('[NaviChat] 🤖 Assistant:', loadedMessages.filter(m => m.role === 'assistant').length);
+    } else {
+      console.log('[NaviChat] 📭 No previous messages found');
     }
     
     setMessagesLoaded(true);
@@ -347,24 +342,16 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     const userMsgId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const timestamp = new Date().toISOString();
     
-    console.log('[NaviChat] 💬 Adding user message:', userMsgId);
+    console.log('[NaviChat] 👤 Adding user message:', userMsgId);
     
     const newMessage: ChatMessageDisplay = {
       id: userMsgId,
       role: 'user',
       content,
       timestamp,
-      saved: true,
     };
     
-    setChatMessages(prev => {
-      const exists = prev.some(m => m.id === userMsgId);
-      if (exists) {
-        console.log('[NaviChat] User message already exists, skipping');
-        return prev;
-      }
-      return [...prev, newMessage];
-    });
+    setChatMessages(prev => [...prev, newMessage]);
     
     saveChatMessage({
       id: userMsgId,
@@ -374,46 +361,38 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
       timestamp,
     });
     
-    console.log('[NaviChat] ✅ User message saved:', userMsgId, content.substring(0, 50) + '...');
+    console.log('[NaviChat] ✅ User message saved:', userMsgId);
     
     return userMsgId;
   }, [saveChatMessage]);
 
-  const addAssistantMessage = useCallback((content: string) => {
+  const addAssistantMessage = useCallback((content: string, agentMsgId: string) => {
     if (!content || content.trim().length === 0) {
-      console.warn('[NaviChat] ⚠️ Empty assistant message, skipping save');
+      console.warn('[NaviChat] ⚠️ Empty assistant message, skipping');
       return null;
     }
     
     const assistantMsgId = `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const timestamp = new Date().toISOString();
     
-    console.log('[NaviChat] 🤖 Adding assistant message:', assistantMsgId);
+    console.log('[NaviChat] 🤖 SAVING assistant message');
+    console.log('[NaviChat] 🤖 ID:', assistantMsgId);
+    console.log('[NaviChat] 🤖 Agent ID:', agentMsgId);
     console.log('[NaviChat] 🤖 Content length:', content.length);
-    console.log('[NaviChat] 🤖 Content preview:', content.substring(0, 100) + '...');
+    console.log('[NaviChat] 🤖 Preview:', content.substring(0, 150));
     
     const newMessage: ChatMessageDisplay = {
       id: assistantMsgId,
       role: 'assistant',
       content,
       timestamp,
-      saved: true,
     };
     
     setChatMessages(prev => {
-      const recentAssistantMsgs = prev.filter(m => m.role === 'assistant').slice(-3);
-      const isDuplicate = recentAssistantMsgs.some(m => 
-        m.content === content || 
-        (m.content.length > 50 && content.length > 50 && m.content.substring(0, 50) === content.substring(0, 50))
-      );
-      
-      if (isDuplicate) {
-        console.log('[NaviChat] ⚠️ Duplicate assistant message detected, skipping');
-        return prev;
-      }
-      
-      console.log('[NaviChat] ✅ Adding assistant message to chat state');
-      return [...prev, newMessage];
+      console.log('[NaviChat] 📝 Current messages:', prev.length);
+      const updated = [...prev, newMessage];
+      console.log('[NaviChat] 📝 Updated messages:', updated.length);
+      return updated;
     });
     
     saveChatMessage({
@@ -423,10 +402,13 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
       full_output: content,
       timestamp,
       output_tokens: content.length,
+      metadata: {
+        agentMsgId,
+        savedAt: timestamp,
+      },
     });
     
-    console.log('[NaviChat] ✅ Assistant message saved to context:', assistantMsgId);
-    console.log('[NaviChat] ✅ Full content length:', content.length);
+    console.log('[NaviChat] ✅ Assistant message PERSISTED:', assistantMsgId);
     
     return assistantMsgId;
   }, [saveChatMessage]);
@@ -443,7 +425,6 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     if (!fullText || fullText.trim().length === 0) return;
     
     if (lastMessage.id === lastProcessedMessageIdRef.current) {
-      console.log('[NaviChat] Message already processed:', lastMessage.id);
       return;
     }
     
@@ -453,29 +434,30 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     
     streamingTimeoutRef.current = setTimeout(() => {
       if (lastMessage.id === lastProcessedMessageIdRef.current) {
-        console.log('[NaviChat] Message was already saved during timeout');
         setIsStreaming(false);
         return;
       }
       
-      console.log('[NaviChat] 🎯 Streaming complete, saving assistant message...');
+      console.log('[NaviChat] 🎯 STREAM COMPLETE - Saving response');
       console.log('[NaviChat] 🎯 Agent message ID:', lastMessage.id);
-      console.log('[NaviChat] 🎯 Full text length:', fullText.length);
+      console.log('[NaviChat] 🎯 Response length:', fullText.length, 'chars');
       
       lastProcessedMessageIdRef.current = lastMessage.id;
       
-      const savedId = addAssistantMessage(fullText);
+      const savedId = addAssistantMessage(fullText, lastMessage.id);
       
       if (savedId) {
-        console.log('[NaviChat] 🎯 Assistant message saved with ID:', savedId);
+        console.log('[NaviChat] 🎯 ✅ Response saved with ID:', savedId);
+      } else {
+        console.error('[NaviChat] 🎯 ❌ Failed to save response');
       }
       
       setIsStreaming(false);
       
       naviAPI.sync.omnisync().catch(err => {
-        console.error('[NaviChat] Background sync failed:', err);
+        console.error('[NaviChat] Background sync error:', err);
       });
-    }, 1000);
+    }, 800);
     
     return () => {
       if (streamingTimeoutRef.current) {

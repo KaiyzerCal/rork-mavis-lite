@@ -492,18 +492,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
     const fullContent = message.full_output || message.content || '';
     
     if (!fullContent || fullContent.trim().length === 0) {
-      console.warn('[AppContext] ⚠️ Attempted to save empty message, skipping');
+      console.warn('[AppContext] ⚠️ Empty message, skipping save');
       return;
     }
     
-    console.log('[AppContext] 💾 FULLPERSIST v4: Saving COMPLETE chat message');
-    console.log('[AppContext] 💾 Message ID:', message.id);
-    console.log('[AppContext] 💾 Role:', message.role);
-    console.log('[AppContext] 💾 Original content length:', message.content?.length || 0, 'chars');
-    console.log('[AppContext] 💾 Original full_output length:', message.full_output?.length || 0, 'chars');
-    console.log('[AppContext] 💾 Effective full content length:', fullContent.length, 'chars');
-    console.log('[AppContext] 💾 First 200 chars:', fullContent.substring(0, 200));
-    console.log('[AppContext] 💾 Last 200 chars:', fullContent.substring(Math.max(0, fullContent.length - 200)));
+    console.log('[AppContext] 💾 Saving chat message:', message.id, message.role, fullContent.length, 'chars');
     
     const messageToSave: ChatMessage = {
       id: message.id,
@@ -516,10 +509,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
       metadata: {
         ...message.metadata,
         contentLength: fullContent.length,
-        fullOutputLength: fullContent.length,
-        wasTruncated: false,
         savedAt: new Date().toISOString(),
-        persistVersion: 'v4',
+        persistVersion: 'v5',
       },
     };
     
@@ -532,6 +523,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
         updatedAt: new Date().toISOString(),
       };
 
+      const existingIds = new Set(currentThread.messages.map(m => m.id));
+      if (existingIds.has(message.id)) {
+        console.log('[AppContext] ⚠️ Message already exists:', message.id);
+        return prev;
+      }
+
       const updatedThread: ChatThread = {
         ...currentThread,
         messages: [...currentThread.messages, messageToSave],
@@ -539,20 +536,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
       };
 
       const otherThreads = chatHistory.slice(1);
-      const newState = {
+      
+      console.log('[AppContext] ✅ Message saved. Thread now has', updatedThread.messages.length, 'messages');
+      
+      return {
         ...prev,
         chatHistory: [updatedThread, ...otherThreads],
       };
-      
-      console.log('[AppContext] ✅ FULLPERSIST v4: Message saved with COMPLETE output');
-      console.log('[AppContext] ✅ Thread ID:', updatedThread.id);
-      console.log('[AppContext] ✅ Total messages in thread:', updatedThread.messages.length);
-      console.log('[AppContext] ✅ Last message ID:', messageToSave.id);
-      console.log('[AppContext] ✅ Last message content length:', messageToSave.content.length, 'chars');
-      console.log('[AppContext] ✅ Last message full_output length:', messageToSave.full_output?.length, 'chars');
-      console.log('[AppContext] ✅ Content === full_output:', messageToSave.content === messageToSave.full_output);
-      
-      return newState;
     });
   }, []);
 
@@ -560,25 +550,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
     const chatHistory = safeArray<ChatThread>(state.chatHistory, []);
     const messages = chatHistory[0]?.messages || [];
     
-    console.log('[AppContext] 📖 FULLPERSIST v4: Loading chat history');
-    console.log('[AppContext] 📖 Total messages:', messages.length);
+    console.log('[AppContext] 📖 Getting chat history:', messages.length, 'messages');
     
     if (messages.length > 0) {
-      const lastThree = messages.slice(-3);
-      lastThree.forEach((msg, idx) => {
-        const effectiveContent = msg.full_output || msg.content;
-        console.log(`[AppContext] 📖 Message ${messages.length - 3 + idx + 1}/${messages.length}:`, {
-          id: msg.id,
-          role: msg.role,
-          contentLength: msg.content.length,
-          fullOutputLength: msg.full_output?.length || 0,
-          effectiveLength: effectiveContent.length,
-          hasFullOutput: !!msg.full_output,
-          contentMatchesFullOutput: msg.content === msg.full_output,
-          contentPreview: effectiveContent.substring(0, 100) + '...',
-          persistVersion: msg.metadata?.persistVersion,
-        });
-      });
+      const userCount = messages.filter(m => m.role === 'user').length;
+      const assistantCount = messages.filter(m => m.role === 'assistant').length;
+      console.log('[AppContext] 📖 User:', userCount, '| Assistant:', assistantCount);
     }
     
     return messages;
