@@ -9,9 +9,10 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Settings as SettingsIcon, User, Shield, Trash2, FileText, Sparkle, Palette, ChevronRight, ImageIcon, Cloud, CloudOff, RefreshCw, Calendar, Link2 } from 'lucide-react-native';
+import { Settings as SettingsIcon, User, Shield, Trash2, FileText, Sparkle, Palette, ChevronRight, ImageIcon, Cloud, CloudOff, RefreshCw, Calendar, Link2, RotateCcw, Edit3 } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { useApp } from '@/contexts/AppContext';
@@ -42,7 +43,7 @@ const SKIN_PRESETS: {
 }));
 
 export default function Settings() {
-  const { state, isLoaded, clearChatHistory, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, deleteMemoryItem } = useApp();
+  const { state, isLoaded, clearChatHistory, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, deleteMemoryItem, updateNaviName, resetCharacterClass } = useApp();
   const { isSyncing, lastSyncTime, syncError, isOnline, forceSync } = useBackendSync();
   const insets = useSafeAreaInsets();
   const naviProfile = state.settings.navi.profile;
@@ -51,6 +52,8 @@ export default function Settings() {
   const [skinModalVisible, setSkinModalVisible] = useState<boolean>(false);
   const [modeModalVisible, setModeModalVisible] = useState<boolean>(false);
   const [avatarModalVisible, setAvatarModalVisible] = useState<boolean>(false);
+  const [naviNameModalVisible, setNaviNameModalVisible] = useState<boolean>(false);
+  const [tempNaviName, setTempNaviName] = useState<string>(naviProfile.name || 'Navi');
 
   if (!isLoaded) {
     return (
@@ -123,35 +126,49 @@ export default function Settings() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Profile</Text>
             
+            <View style={styles.settingCard}>
+              <View style={styles.settingIconContainer}>
+                <Shield size={24} color="#6366f1" />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>Character Class</Text>
+                <Text style={styles.settingDescription}>
+                  {state.user.characterClass 
+                    ? `${state.user.characterClass.archetype} (${state.user.characterClass.mbti})` 
+                    : 'Not yet determined'}
+                </Text>
+              </View>
+            </View>
+
             <TouchableOpacity
               style={styles.settingCard}
               onPress={() => {
                 Alert.alert(
-                  'Avatar Configuration',
-                  'This will take you through the 16 Personalities assessment to determine your character class.',
+                  'Retake Assessment',
+                  'This will reset your current character class and take you through the 16 Personalities assessment again. Your quests and progress will remain.\n\nAre you sure?',
                   [
                     { text: 'Cancel', style: 'cancel' },
                     {
-                      text: 'Start Assessment',
-                      style: 'default',
-                      onPress: () => router.push('/dashboard'),
+                      text: 'Retake Assessment',
+                      style: 'destructive',
+                      onPress: () => {
+                        resetCharacterClass();
+                        router.push('/dashboard');
+                      },
                     },
                   ]
                 );
               }}
               activeOpacity={0.7}
             >
-              <View style={styles.settingIconContainer}>
-                <Shield size={24} color="#6366f1" />
+              <View style={[styles.settingIconContainer, { backgroundColor: '#fef3c7' }]}>
+                <RotateCcw size={24} color="#d97706" />
               </View>
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Avatar</Text>
-                <Text style={styles.settingDescription}>
-                  {state.user.characterClass 
-                    ? `Current: ${state.user.characterClass.archetype}` 
-                    : 'Take personality assessment'}
-                </Text>
+                <Text style={styles.settingTitle}>Retake Character Assessment</Text>
+                <Text style={styles.settingDescription}>Redo the 16 Personalities quiz</Text>
               </View>
+              <ChevronRight size={20} color="#94a3b8" />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -170,6 +187,26 @@ export default function Settings() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Navi Customization</Text>
+
+            <TouchableOpacity
+              style={styles.settingCard}
+              onPress={() => {
+                setTempNaviName(naviProfile.name || 'Navi');
+                setNaviNameModalVisible(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.settingIconContainer, { backgroundColor: '#dcfce7' }]}>
+                <Edit3 size={24} color="#16a34a" />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>Navi Name</Text>
+                <Text style={styles.settingDescription}>
+                  {naviProfile.name || 'Navi'}
+                </Text>
+              </View>
+              <ChevronRight size={20} color="#94a3b8" />
+            </TouchableOpacity>
             
             <TouchableOpacity
               style={styles.settingCard}
@@ -835,6 +872,62 @@ export default function Settings() {
             </View>
           </View>
         </Modal>
+
+        <Modal
+          visible={naviNameModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setNaviNameModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Change Navi Name</Text>
+                <TouchableOpacity onPress={() => setNaviNameModalVisible(false)}>
+                  <Text style={styles.modalClose}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.naviNameHint}>
+                Give your AI companion a custom name. They will refer to themselves by this name.
+              </Text>
+              <TextInput
+                style={styles.naviNameInput}
+                value={tempNaviName}
+                onChangeText={setTempNaviName}
+                placeholder="Enter a name..."
+                placeholderTextColor="#94a3b8"
+                maxLength={20}
+                autoFocus
+              />
+              <View style={styles.naviNameButtons}>
+                <TouchableOpacity
+                  style={styles.naviNameCancelButton}
+                  onPress={() => setNaviNameModalVisible(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.naviNameCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.naviNameSaveButton,
+                    (!tempNaviName.trim()) && styles.naviNameSaveButtonDisabled
+                  ]}
+                  onPress={() => {
+                    if (tempNaviName.trim()) {
+                      updateNaviName(tempNaviName.trim());
+                      setNaviNameModalVisible(false);
+                      Alert.alert('Name Updated', `Your AI companion is now called "${tempNaviName.trim()}"`);
+                    }
+                  }}
+                  disabled={!tempNaviName.trim()}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.naviNameSaveText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </View>
   );
@@ -1315,5 +1408,53 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748b',
     marginTop: 2,
+  },
+  naviNameHint: {
+    fontSize: 15,
+    color: '#64748b',
+    marginBottom: 16,
+    lineHeight: 22,
+  },
+  naviNameInput: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: '#0f172a',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    marginBottom: 20,
+  },
+  naviNameButtons: {
+    flexDirection: 'row' as const,
+    gap: 12,
+  },
+  naviNameCancelButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center' as const,
+  },
+  naviNameCancelText: {
+    fontSize: 17,
+    fontWeight: '600' as const,
+    color: '#64748b',
+  },
+  naviNameSaveButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#6366f1',
+    alignItems: 'center' as const,
+  },
+  naviNameSaveButtonDisabled: {
+    backgroundColor: '#c7d2fe',
+  },
+  naviNameSaveText: {
+    fontSize: 17,
+    fontWeight: '600' as const,
+    color: '#ffffff',
   },
 });
