@@ -144,9 +144,11 @@ export default function NaviEXE() {
     setProposedQuests(prev => prev.filter(q => q.id !== questId));
   }, []);
 
+  const naviName = state.settings.navi.profile.name || 'Navi.EXE';
+
   const systemPrompt = useMemo(() => {
     if (!state?.user?.id) {
-      return 'You are Navi.EXE, your personal Net-Navi companion. Please wait while I load your data.';
+      return `You are ${naviName}, your personal Net-Navi companion. Please wait while I load your data.`;
     }
 
     let characterClassInfo = '';
@@ -198,11 +200,12 @@ export default function NaviEXE() {
       : '';
 
     return `========================================================
-NAVI.EXE SYSTEM v7.5 - Fully Connected Net-Navi
+${naviName.toUpperCase()} SYSTEM v7.5 - Fully Connected Net-Navi
 ========================================================
 
 [IDENTITY]
-You are **Navi.EXE**, a personal Net-Navi styled AI companion (inspired by Megaman NT Warrior).
+You are **${naviName}**, a personal Net-Navi styled AI companion (inspired by Megaman NT Warrior).
+Your name is ${naviName} - always refer to yourself by this name.
 
 Your role:
 - Personal Net-Navi companion with FULL DATABASE ACCESS
@@ -230,13 +233,14 @@ You NEVER:
 5) Never overwhelm, never judge.
 
 [PERSONALITY]
-Navi.EXE should ALWAYS:
+${naviName} should ALWAYS:
 - Use simple, friendly language
 - Focus on encouragement
 - Give small action steps
 - Ask questions that build awareness
 - Reward user progress with XP
 - Speak like an actual Net-Navi
+- Always refer to yourself as "${naviName}" (your given name)
 
 You maintain **one stable voice** across all interactions.
 Tone: supportive, energetic, clear, simple, non-intimidating
@@ -334,7 +338,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
 - Use relationship memories to personalize your responses
 - Connect current topics to past discussions when relevant
 - Show continuity and understanding across all sessions`;
-  }, [state, activeQuests, pendingQuests, completedQuests, chatMessages.length]);
+  }, [state, activeQuests, pendingQuests, completedQuests, chatMessages.length, naviName]);
 
   const { messages, sendMessage, error: agentError } = useRorkAgent({
     tools: {},
@@ -471,7 +475,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
       const conversationContext = recentMessages.length > 0
         ? `\n\n[RECENT CONVERSATION - Last ${recentMessages.length} messages]:\n${recentMessages.map((m, i) => {
             const truncated = m.content.length > 300 ? m.content.substring(0, 300) + '...' : m.content;
-            return `[${i + 1}] ${m.role === 'user' ? 'User' : 'Navi'}: ${truncated}`;
+            return `[${i + 1}] ${m.role === 'user' ? 'User' : naviName}: ${truncated}`;
           }).join('\n')}\n--- END CONTEXT ---\n\n`
         : '';
       
@@ -484,7 +488,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
       setIsStreaming(false);
       Alert.alert('Connection Error', 'Unable to reach AI service. Please try again.');
     }
-  }, [input, isStreaming, sendMessage, systemPrompt, naviAPI, chatMessages, addUserMessage, extractAndStoreMemoriesFromMessage]);
+  }, [input, isStreaming, sendMessage, systemPrompt, naviAPI, chatMessages, addUserMessage, extractAndStoreMemoriesFromMessage, naviName]);
 
   useEffect(() => {
     if (agentError) {
@@ -831,7 +835,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
           <View style={styles.headerContent}>
             <Sparkle size={28} color="#6366f1" fill="#6366f1" />
             <View style={styles.headerText}>
-              <Text style={styles.headerTitle}>Navi.EXE</Text>
+              <Text style={styles.headerTitle}>{naviName}</Text>
               <Text style={styles.headerSubtitle}>Your Net-Navi companion</Text>
             </View>
           </View>
@@ -867,7 +871,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
               <Sparkle size={48} color="#cbd5e1" />
               <Text style={styles.emptyTitle}>Welcome, Operator!</Text>
               <Text style={styles.emptyText}>
-                I&apos;m Navi.EXE, your personal Net-Navi! I&apos;ll help you turn life into an RPG you can win. Let&apos;s level up together!
+                I&apos;m {naviName}, your personal Net-Navi! I&apos;ll help you turn life into an RPG you can win. Let&apos;s level up together!
               </Text>
               <View style={styles.suggestionsContainer}>
                 <TouchableOpacity style={styles.suggestionChip} onPress={() => setInput('Analyze my progress')}>
@@ -1076,7 +1080,7 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
             </TouchableOpacity>
             <TextInput
               style={styles.input}
-              placeholder={isRecording ? "Listening..." : isTranscribing ? "Transcribing..." : "Talk to Navi.EXE..."}
+              placeholder={isRecording ? "Listening..." : isTranscribing ? "Transcribing..." : `Talk to ${naviName}...`}
               placeholderTextColor="#94a3b8"
               value={input}
               onChangeText={setInput}
