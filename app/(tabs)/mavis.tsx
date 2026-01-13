@@ -57,6 +57,7 @@ export default function NaviEXE() {
   const scrollViewRef = useRef<ScrollView>(null);
   const lastProcessedMessageIdRef = useRef<string | null>(null);
   const streamingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasLoadedInitialHistoryRef = useRef<boolean>(false);
   
   const { state, isLoaded, acceptQuest, declineQuest, getChatHistory, saveChatMessage, addQuest } = useApp();
   const naviAPI = useNaviAPI();
@@ -71,6 +72,12 @@ export default function NaviEXE() {
       return;
     }
     
+    if (hasLoadedInitialHistoryRef.current) {
+      console.log('[NaviChat] Initial history already loaded, skipping reload');
+      return;
+    }
+    
+    hasLoadedInitialHistoryRef.current = true;
     console.log('[NaviChat] App state loaded, loading chat history...');
     const storedHistory = getChatHistory();
     console.log('[NaviChat] Found', storedHistory.length, 'messages in storage');
