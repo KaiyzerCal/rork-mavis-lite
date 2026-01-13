@@ -13,9 +13,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shield, TrendingUp, Target, Award, Sparkle, Zap, CheckCircle, Plus, Edit2, Trash2, X, ChevronDown, ChevronUp, Palette, User, Hexagon, Circle, Square, Diamond, Sun } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-
 import { useApp } from '@/contexts/AppContext';
+import { useRouter } from 'expo-router';
 import { ARCHETYPE_DATA } from '@/constants/archetypes';
 import { HIDDEN_CLASSES, getHiddenClassProgress } from '@/constants/hiddenClasses';
 import NaviAvatar from '@/components/NaviAvatar';
@@ -74,9 +73,11 @@ const SHAPE_OPTIONS: { id: 'circle' | 'rounded-square' | 'hexagon' | 'diamond'; 
 ];
 
 export default function Character() {
-  const { state, isLoaded, calculateLevel, addSkill, updateSkill, deleteSkill, addSubSkill, updateSubSkill, deleteSubSkill, updateNaviAvatar } = useApp();
+  const { state, isLoaded, calculateLevel, addSkill, updateSkill, deleteSkill, addSubSkill, updateSubSkill, deleteSubSkill, updateNaviAvatar, resetCharacterClass, updateNaviName } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [naviNameModalVisible, setNaviNameModalVisible] = useState<boolean>(false);
+  const [naviNameInput, setNaviNameInput] = useState<string>(state.settings.navi.profile.name);
   const [activeTab, setActiveTab] = useState<TabType>('character');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [subSkillModalVisible, setSubSkillModalVisible] = useState<boolean>(false);
@@ -211,6 +212,29 @@ export default function Character() {
             )}
 
             <Text style={styles.description}>{archetypeInfo.description}</Text>
+
+            <TouchableOpacity
+              style={styles.retakeAssessmentButton}
+              onPress={() => {
+                Alert.alert(
+                  'Retake Assessment',
+                  'Are you sure you want to retake the character class assessment? Your current class progress will be reset.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Retake',
+                      style: 'destructive',
+                      onPress: () => {
+                        resetCharacterClass();
+                        router.replace('/dashboard');
+                      },
+                    },
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.retakeAssessmentText}>Retake Assessment</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.xpCard}>
@@ -793,7 +817,15 @@ export default function Character() {
                   size={140}
                 />
               </View>
-              <Text style={styles.naviNameText}>{state.settings.navi.profile.name}</Text>
+              <TouchableOpacity onPress={() => {
+                setNaviNameInput(state.settings.navi.profile.name);
+                setNaviNameModalVisible(true);
+              }}>
+                <View style={styles.naviNameRow}>
+                  <Text style={styles.naviNameText}>{state.settings.navi.profile.name}</Text>
+                  <Edit2 size={16} color="#64748b" style={styles.naviNameEditIcon} />
+                </View>
+              </TouchableOpacity>
               <Text style={styles.naviStyleText}>
                 {AVATAR_STYLES.find(s => s.id === state.settings.navi.profile.avatar.style)?.name || 'Classic'} • 
                 Level {state.settings.navi.profile.level}
@@ -1123,6 +1155,50 @@ export default function Character() {
                   <Text style={styles.saveButtonText}>
                     {editingSubSkill ? 'Update Sub-Skill' : 'Add Sub-Skill'}
                   </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={naviNameModalVisible}
+            animationType="slide"
+            transparent
+            onRequestClose={() => setNaviNameModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalContent, { paddingBottom: insets.bottom + 20 }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Rename Navi</Text>
+                  <TouchableOpacity onPress={() => setNaviNameModalVisible(false)}>
+                    <X size={24} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.formField}>
+                  <Text style={styles.fieldLabel}>Navi Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter a name for your Navi"
+                    placeholderTextColor="#94a3b8"
+                    value={naviNameInput}
+                    onChangeText={setNaviNameInput}
+                    autoFocus
+                  />
+                  <Text style={styles.naviNameHint}>Your Navi will refer to itself by this name</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.saveButton, !naviNameInput.trim() && styles.saveButtonDisabled]}
+                  onPress={() => {
+                    if (naviNameInput.trim()) {
+                      updateNaviName(naviNameInput.trim());
+                      setNaviNameModalVisible(false);
+                    }
+                  }}
+                  disabled={!naviNameInput.trim()}
+                >
+                  <Text style={styles.saveButtonText}>Save Name</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -2468,5 +2544,34 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600' as const,
     color: '#0f172a',
+  },
+  retakeAssessmentButton: {
+    marginTop: 16,
+    backgroundColor: '#fef2f2',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    alignItems: 'center',
+  },
+  retakeAssessmentText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#dc2626',
+  },
+  naviNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  naviNameEditIcon: {
+    marginTop: -2,
+  },
+  naviNameHint: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 8,
+    fontStyle: 'italic' as const,
   },
 });

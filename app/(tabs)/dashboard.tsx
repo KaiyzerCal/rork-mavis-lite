@@ -7,16 +7,14 @@ import {
   TouchableOpacity,
   Platform,
   Modal,
-  TextInput,
   Alert,
-
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Target, CheckCircle, TrendingUp } from 'lucide-react-native';
+import { Target, CheckCircle, ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { useApp } from '@/contexts/AppContext';
-import { MBTI_QUESTIONS, ARCHETYPE_DATA, MBTI_TO_ARCHETYPE } from '@/constants/archetypes';
+import { MBTI_QUESTIONS, MBTI_TO_ARCHETYPE } from '@/constants/archetypes';
 import type { MBTIType } from '@/types';
 
 export default function Dashboard() {
@@ -24,13 +22,9 @@ export default function Dashboard() {
 
   const insets = useSafeAreaInsets();
 
-  const [showCompleted, setShowCompleted] = useState<boolean>(false);
-
   const [assessmentVisible, setAssessmentVisible] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     if (isLoaded && !state.user.hasCompletedAssessment) {
@@ -201,6 +195,15 @@ export default function Dashboard() {
         >
           <View style={[styles.assessmentContainer, { paddingTop: insets.top }]}>
             <View style={styles.assessmentHeader}>
+              {currentQuestion > 0 && (
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setCurrentQuestion(currentQuestion - 1)}
+                >
+                  <ChevronLeft size={20} color="#6366f1" />
+                  <Text style={styles.backButtonText}>Back</Text>
+                </TouchableOpacity>
+              )}
               <Text style={styles.assessmentTitle}>Discover Your Character Class</Text>
               <Text style={styles.assessmentSubtitle}>
                 Answer these questions to unlock your archetype and begin your journey
@@ -861,5 +864,16 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: '#6366f1',
     textTransform: 'uppercase' as const,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 4,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#6366f1',
   },
 });

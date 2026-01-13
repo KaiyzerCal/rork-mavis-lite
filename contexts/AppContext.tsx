@@ -751,6 +751,32 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }));
   }, []);
 
+  const updateNaviName = useCallback((name: string) => {
+    setState((prev) => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
+        navi: {
+          profile: {
+            ...prev.settings.navi.profile,
+            name,
+          },
+        },
+      },
+    }));
+  }, []);
+
+  const resetCharacterClass = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      user: {
+        ...prev.user,
+        characterClass: undefined,
+        hasCompletedAssessment: false,
+      },
+    }));
+  }, []);
+
   const incrementNaviInteraction = useCallback(() => {
     setState((prev) => ({
       ...prev,
@@ -1160,6 +1186,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateNaviSkin,
     updateNaviMode,
     updateNaviAvatar,
+    updateNaviName,
+    resetCharacterClass,
     incrementNaviInteraction,
     addMemoryItem,
     updateMemoryItem,
@@ -1170,5 +1198,5 @@ export const [AppProvider, useApp] = createContextHook(() => {
     incrementBondOnPositiveEngagement,
     incrementBondOnEmotionalDisclosure,
     omnisync,
-  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, incrementNaviInteraction, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, omnisync]);
+  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, omnisync]);
 });
