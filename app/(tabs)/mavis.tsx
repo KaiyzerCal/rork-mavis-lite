@@ -72,16 +72,21 @@ export default function NaviEXE() {
       return;
     }
     
+    if (initialLoadDone) {
+      return;
+    }
+    
     const chatThreads = state.chatHistory || [];
     const currentThread = chatThreads[0];
     const storedMessages = currentThread?.messages || [];
     
-    console.log('[NaviChat] 🔄 Syncing chat history from state...');
-    console.log('[NaviChat] 📖 Found', storedMessages.length, 'messages in state');
+    console.log('[NaviChat] 🔄 INITIAL LOAD - Syncing chat history from state...');
+    console.log('[NaviChat] 📖 Found', storedMessages.length, 'messages in storage');
     
     if (storedMessages.length > 0) {
       const loadedMessages: ChatMessageDisplay[] = storedMessages.map(msg => {
         const messageContent = msg.full_output || msg.content || '';
+        console.log(`[NaviChat] 📖 Loading msg ${msg.id}: role=${msg.role}, len=${messageContent.length}`);
         return {
           id: msg.id,
           role: msg.role as 'user' | 'assistant',
@@ -93,12 +98,16 @@ export default function NaviEXE() {
       const userCount = loadedMessages.filter(m => m.role === 'user').length;
       const assistantCount = loadedMessages.filter(m => m.role === 'assistant').length;
       
-      console.log('[NaviChat] ✅ Loaded', loadedMessages.length, 'messages');
+      console.log('[NaviChat] ✅ INITIAL LOAD complete:', loadedMessages.length, 'messages');
       console.log('[NaviChat] 👤 User:', userCount, '| 🤖 Assistant:', assistantCount);
       
+      if (assistantCount === 0 && userCount > 0) {
+        console.warn('[NaviChat] ⚠️ WARNING: No assistant messages found but user messages exist!');
+      }
+      
       setChatMessages(loadedMessages);
-    } else if (!initialLoadDone) {
-      console.log('[NaviChat] 📭 No previous messages found');
+    } else {
+      console.log('[NaviChat] 📭 No previous messages found in storage');
       setChatMessages([]);
     }
     
@@ -350,6 +359,15 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     
     console.log('[NaviChat] 👤 Adding user message:', userMsgId);
     
+    const newMessage: ChatMessageDisplay = {
+      id: userMsgId,
+      role: 'user',
+      content,
+      timestamp,
+    };
+    
+    setChatMessages(prev => [...prev, newMessage]);
+    
     saveChatMessage({
       id: userMsgId,
       role: 'user',
@@ -357,11 +375,11 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
       full_output: content,
       timestamp,
       metadata: {
-        persistVersion: 'v6',
+        persistVersion: 'v7',
       },
     });
     
-    console.log('[NaviChat] ✅ User message saved to context:', userMsgId);
+    console.log('[NaviChat] ✅ User message saved to state + context:', userMsgId);
     
     return userMsgId;
   }, [saveChatMessage]);
@@ -381,6 +399,23 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
     console.log('[NaviChat] 🤖 Content length:', content.length);
     console.log('[NaviChat] 🤖 Preview:', content.substring(0, 150));
     
+    const newMessage: ChatMessageDisplay = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content,
+      timestamp,
+    };
+    
+    setChatMessages(prev => {
+      const existingIds = new Set(prev.map(m => m.id));
+      if (existingIds.has(assistantMsgId)) {
+        console.log('[NaviChat] ⚠️ Duplicate assistant message, skipping local add');
+        return prev;
+      }
+      console.log('[NaviChat] 🤖 Adding assistant message to local state');
+      return [...prev, newMessage];
+    });
+    
     saveChatMessage({
       id: assistantMsgId,
       role: 'assistant',
@@ -391,11 +426,11 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
       metadata: {
         agentMsgId,
         savedAt: timestamp,
-        persistVersion: 'v6',
+        persistVersion: 'v7',
       },
     });
     
-    console.log('[NaviChat] ✅ Assistant message PERSISTED to context:', assistantMsgId);
+    console.log('[NaviChat] ✅ Assistant message PERSISTED to state + context:', assistantMsgId);
     
     return assistantMsgId;
   }, [saveChatMessage]);
