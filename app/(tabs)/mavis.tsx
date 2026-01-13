@@ -798,33 +798,58 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
             setCurrentlyPlayingId(null);
           };
           window.speechSynthesis.speak(utterance);
+          console.log('[TTS] Web speech started successfully');
         } else {
-          Alert.alert('Not Supported', 'Speech synthesis is not supported on this browser.');
+          console.log('[TTS] Web speech synthesis not supported');
           setIsSpeaking(false);
           setCurrentlyPlayingId(null);
         }
       } else {
-        const { speak, isSpeakingAsync } = await import('expo-speech');
-        const speaking = await isSpeakingAsync();
-        if (speaking) {
+        try {
           const Speech = await import('expo-speech');
-          await Speech.stop();
+          if (Speech && Speech.speak) {
+            const speaking = await Speech.isSpeakingAsync();
+            if (speaking) {
+              await Speech.stop();
+            }
+            Speech.speak(cleanText, {
+              rate: 1.0,
+              pitch: 1.0,
+              onDone: () => {
+                setIsSpeaking(false);
+                setCurrentlyPlayingId(null);
+              },
+              onError: () => {
+                setIsSpeaking(false);
+                setCurrentlyPlayingId(null);
+              },
+            });
+            console.log('[TTS] Native speech started successfully');
+          } else {
+            throw new Error('expo-speech module not available');
+          }
+        } catch (speechError) {
+          console.warn('[TTS] expo-speech not available, falling back to web:', speechError);
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.onend = () => {
+              setIsSpeaking(false);
+              setCurrentlyPlayingId(null);
+            };
+            utterance.onerror = () => {
+              setIsSpeaking(false);
+              setCurrentlyPlayingId(null);
+            };
+            window.speechSynthesis.speak(utterance);
+          } else {
+            setIsSpeaking(false);
+            setCurrentlyPlayingId(null);
+          }
         }
-        speak(cleanText, {
-          rate: 1.0,
-          pitch: 1.0,
-          onDone: () => {
-            setIsSpeaking(false);
-            setCurrentlyPlayingId(null);
-          },
-          onError: () => {
-            setIsSpeaking(false);
-            setCurrentlyPlayingId(null);
-          },
-        });
       }
-
-      console.log('[TTS] Speech started successfully');
     } catch (error) {
       console.error('[TTS] Error:', error);
       setIsSpeaking(false);
@@ -839,8 +864,17 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
           window.speechSynthesis.cancel();
         }
       } else {
-        const Speech = await import('expo-speech');
-        await Speech.stop();
+        try {
+          const Speech = await import('expo-speech');
+          if (Speech && Speech.stop) {
+            await Speech.stop();
+          }
+        } catch (speechError) {
+          console.warn('[TTS] Could not stop expo-speech:', speechError);
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+          }
+        }
       }
       if (soundRef.current) {
         await soundRef.current.stopAsync();
@@ -851,6 +885,8 @@ ALL conversations are saved and persist across sessions. You have access to EXTE
       setCurrentlyPlayingId(null);
     } catch (error) {
       console.error('[TTS] Stop error:', error);
+      setIsSpeaking(false);
+      setCurrentlyPlayingId(null);
     }
   }, []);
 
