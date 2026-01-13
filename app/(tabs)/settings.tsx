@@ -741,6 +741,72 @@ export default function Settings() {
                   ))}
                 </View>
 
+                <Text style={styles.sectionLabel}>🐾 Animals - Sea & Sky</Text>
+                <View style={styles.characterGrid}>
+                  {([
+                    { id: 'animal_dolphin', name: 'Dolphin' },
+                    { id: 'animal_seahorse', name: 'Seahorse' },
+                    { id: 'animal_turtle', name: 'Turtle' },
+                    { id: 'animal_shark', name: 'Shark' },
+                    { id: 'animal_butterfly', name: 'Butterfly' },
+                    { id: 'animal_dragonfly', name: 'Dragonfly' },
+                    { id: 'animal_phoenix', name: 'Phoenix' },
+                  ] as { id: NaviAvatarStyle; name: string }[]).map((char) => (
+                    <TouchableOpacity
+                      key={char.id}
+                      style={[
+                        styles.characterOption,
+                        naviProfile.avatar.style === char.id && styles.characterOptionSelected
+                      ]}
+                      onPress={() => updateNaviAvatar({ style: char.id })}
+                      activeOpacity={0.7}
+                    >
+                      <NaviAvatar
+                        style={char.id}
+                        primaryColor={naviProfile.avatar.primaryColor}
+                        secondaryColor={naviProfile.avatar.secondaryColor}
+                        backgroundColor={naviProfile.avatar.backgroundColor}
+                        size={60}
+                        glowEnabled={false}
+                      />
+                      <Text style={styles.characterName}>{char.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.sectionLabel}>🦁 Animals - Land</Text>
+                <View style={styles.characterGrid}>
+                  {([
+                    { id: 'animal_fox', name: 'Fox' },
+                    { id: 'animal_lion', name: 'Lion' },
+                    { id: 'animal_tiger', name: 'Tiger' },
+                    { id: 'animal_bear', name: 'Bear' },
+                    { id: 'animal_bull', name: 'Bull' },
+                    { id: 'animal_snake', name: 'Snake' },
+                    { id: 'animal_tarantula', name: 'Tarantula' },
+                  ] as { id: NaviAvatarStyle; name: string }[]).map((char) => (
+                    <TouchableOpacity
+                      key={char.id}
+                      style={[
+                        styles.characterOption,
+                        naviProfile.avatar.style === char.id && styles.characterOptionSelected
+                      ]}
+                      onPress={() => updateNaviAvatar({ style: char.id })}
+                      activeOpacity={0.7}
+                    >
+                      <NaviAvatar
+                        style={char.id}
+                        primaryColor={naviProfile.avatar.primaryColor}
+                        secondaryColor={naviProfile.avatar.secondaryColor}
+                        backgroundColor={naviProfile.avatar.backgroundColor}
+                        size={60}
+                        glowEnabled={false}
+                      />
+                      <Text style={styles.characterName}>{char.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
                 <Text style={styles.sectionLabel}>✨ Classic Styles</Text>
                 <View style={styles.characterGrid}>
                   {([
