@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,21 @@ import {
   TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MessageCircle, ChevronRight, Heart, Shield, Lock, Database, MessageSquare, Brain, User, Plus, X, Sparkle } from 'lucide-react-native';
+import { MessageCircle, ChevronRight, Heart, Shield, Lock, Database, MessageSquare, Brain, User, Plus, X, Sparkles, TrendingUp, Award, Zap, Star, ChevronUp } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { useApp } from '@/contexts/AppContext';
 import type { RelationshipMemory } from '@/types';
 import NaviAvatar from '@/components/NaviAvatar';
+import { 
+  getNaviXPProgress, 
+  getNaviRank, 
+  getNextNaviRank, 
+  getUnlockedAbilities, 
+  getNextAbility,
+  NAVI_ABILITIES,
+  type NaviAbility,
+} from '@/constants/naviLeveling';
 
 export default function NaviScreen() {
   const insets = useSafeAreaInsets();
@@ -25,6 +34,7 @@ export default function NaviScreen() {
   const [showMemoryForm, setShowMemoryForm] = useState<boolean>(false);
   const [newMemoryCategory, setNewMemoryCategory] = useState<string>('');
   const [newMemoryDetail, setNewMemoryDetail] = useState<string>('');
+  const [showAllAbilities, setShowAllAbilities] = useState<boolean>(false);
   
   const chatMessages = getChatHistory();
   const relationshipMemories = state.relationshipMemories || [];
@@ -33,6 +43,12 @@ export default function NaviScreen() {
   const bondPercentage = Math.round((naviProfile.affection / 100) * 100);
   const trustPercentage = Math.round((naviProfile.trust / 100) * 100);
   const loyaltyPercentage = Math.round((naviProfile.loyalty / 100) * 100);
+
+  const xpProgress = useMemo(() => getNaviXPProgress(naviProfile.xp), [naviProfile.xp]);
+  const currentRank = useMemo(() => getNaviRank(naviProfile.level), [naviProfile.level]);
+  const nextRank = useMemo(() => getNextNaviRank(naviProfile.level), [naviProfile.level]);
+  const unlockedAbilities = useMemo(() => getUnlockedAbilities(naviProfile.level), [naviProfile.level]);
+  const nextAbility = useMemo(() => getNextAbility(naviProfile.level), [naviProfile.level]);
 
   const handleOmnisync = async () => {
     setIsSyncing(true);
@@ -61,6 +77,28 @@ export default function NaviScreen() {
     }
   };
 
+  const getCategoryIcon = (category: NaviAbility['category']) => {
+    switch (category) {
+      case 'support': return <Heart size={14} color="#ec4899" />;
+      case 'analysis': return <TrendingUp size={14} color="#3b82f6" />;
+      case 'memory': return <Brain size={14} color="#8b5cf6" />;
+      case 'communication': return <MessageCircle size={14} color="#10b981" />;
+      case 'special': return <Sparkles size={14} color="#f59e0b" />;
+      default: return <Zap size={14} color="#6366f1" />;
+    }
+  };
+
+  const getCategoryColor = (category: NaviAbility['category']) => {
+    switch (category) {
+      case 'support': return '#fce7f3';
+      case 'analysis': return '#dbeafe';
+      case 'memory': return '#ede9fe';
+      case 'communication': return '#d1fae5';
+      case 'special': return '#fef3c7';
+      default: return '#e0e7ff';
+    }
+  };
+
   return (
     <View style={styles.backgroundWrapper}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -78,7 +116,7 @@ export default function NaviScreen() {
             activeOpacity={0.8}
           >
             <MessageCircle size={28} color="#ffffff" />
-            <Text style={styles.talkButtonText}>Talk to Navi.EXE</Text>
+            <Text style={styles.talkButtonText}>Talk to {naviProfile.name}</Text>
             <ChevronRight size={28} color="#ffffff" style={styles.talkButtonIcon} />
           </TouchableOpacity>
 
@@ -96,13 +134,98 @@ export default function NaviScreen() {
               glowEnabled={naviProfile.avatar.glowEnabled !== false}
             />
             <Text style={styles.naviName}>{naviProfile.name}</Text>
-            <View style={styles.bondBadge}>
-              <Text style={styles.bondText}>Bond Level {naviProfile.bondLevel} • {naviProfile.bondTitle}</Text>
+            
+            <View style={[styles.rankBadge, { backgroundColor: currentRank.color + '20', borderColor: currentRank.color }]}>
+              <Award size={16} color={currentRank.color} />
+              <Text style={[styles.rankText, { color: currentRank.color }]}>{currentRank.name}</Text>
             </View>
-            <View style={styles.personalityBadge}>
-              <Text style={styles.personalityText}>{naviProfile.personalityState}</Text>
+
+            <View style={styles.levelContainer}>
+              <Text style={styles.levelText}>Level {naviProfile.level}</Text>
+              <View style={styles.xpBarContainer}>
+                <View style={[styles.xpBarFill, { width: `${xpProgress.percentage}%` }]} />
+              </View>
+              <Text style={styles.xpText}>{xpProgress.current} / {xpProgress.required} XP</Text>
             </View>
           </TouchableOpacity>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <TrendingUp size={22} color="#6366f1" />
+              <Text style={styles.sectionTitle}>Level Progress</Text>
+            </View>
+            
+            <View style={styles.progressCard}>
+              <View style={styles.levelProgressRow}>
+                <View style={styles.levelBadge}>
+                  <Text style={styles.levelBadgeText}>Lv.{naviProfile.level}</Text>
+                </View>
+                <View style={styles.progressBarLarge}>
+                  <View style={[styles.progressBarLargeFill, { width: `${xpProgress.percentage}%` }]} />
+                </View>
+                <View style={[styles.levelBadge, styles.levelBadgeNext]}>
+                  <Text style={styles.levelBadgeTextNext}>Lv.{naviProfile.level + 1}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.xpDetailsRow}>
+                <Text style={styles.totalXPText}>{naviProfile.xp.toLocaleString()} Total XP</Text>
+                <Text style={styles.xpNeededText}>{(xpProgress.required - xpProgress.current).toLocaleString()} XP to level up</Text>
+              </View>
+
+              {nextRank && (
+                <View style={styles.nextRankPreview}>
+                  <ChevronUp size={16} color="#64748b" />
+                  <Text style={styles.nextRankText}>
+                    Next Rank: <Text style={[styles.nextRankName, { color: nextRank.color }]}>{nextRank.name}</Text> at Level {nextRank.minLevel}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Zap size={22} color="#f59e0b" />
+              <Text style={styles.sectionTitle}>Abilities ({unlockedAbilities.length}/{NAVI_ABILITIES.length})</Text>
+            </View>
+
+            {nextAbility && (
+              <View style={styles.nextAbilityCard}>
+                <Lock size={18} color="#94a3b8" />
+                <View style={styles.nextAbilityContent}>
+                  <Text style={styles.nextAbilityTitle}>Next Unlock: {nextAbility.name}</Text>
+                  <Text style={styles.nextAbilityDesc}>{nextAbility.description}</Text>
+                  <Text style={styles.nextAbilityLevel}>Unlocks at Level {nextAbility.unlockLevel}</Text>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.abilitiesGrid}>
+              {(showAllAbilities ? unlockedAbilities : unlockedAbilities.slice(0, 6)).map((ability) => (
+                <View key={ability.id} style={[styles.abilityCard, { backgroundColor: getCategoryColor(ability.category) }]}>
+                  <View style={styles.abilityHeader}>
+                    {getCategoryIcon(ability.category)}
+                    <Text style={styles.abilityLevel}>Lv.{ability.unlockLevel}</Text>
+                  </View>
+                  <Text style={styles.abilityName}>{ability.name}</Text>
+                  <Text style={styles.abilityDesc} numberOfLines={2}>{ability.description}</Text>
+                </View>
+              ))}
+            </View>
+
+            {unlockedAbilities.length > 6 && (
+              <TouchableOpacity
+                style={styles.showMoreButton}
+                onPress={() => setShowAllAbilities(!showAllAbilities)}
+              >
+                <Text style={styles.showMoreText}>
+                  {showAllAbilities ? 'Show Less' : `Show ${unlockedAbilities.length - 6} More`}
+                </Text>
+                <ChevronRight size={16} color="#6366f1" style={showAllAbilities ? styles.rotateUp : undefined} />
+              </TouchableOpacity>
+            )}
+          </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Bond Status</Text>
@@ -131,7 +254,7 @@ export default function NaviScreen() {
 
             <View style={styles.bondMetricCard}>
               <View style={styles.metricHeader}>
-                <Sparkle size={20} color="#8b5cf6" fill="#8b5cf6" />
+                <Star size={20} color="#8b5cf6" fill="#8b5cf6" />
                 <Text style={styles.metricLabel}>Loyalty</Text>
                 <Text style={styles.metricValue}>{naviProfile.loyalty}/100</Text>
               </View>
@@ -139,52 +262,43 @@ export default function NaviScreen() {
                 <View style={[styles.progressFill, { width: `${loyaltyPercentage}%`, backgroundColor: '#8b5cf6' }]} />
               </View>
             </View>
+
+            <View style={styles.bondBadgeContainer}>
+              <Text style={styles.bondLevelLabel}>Bond Level {naviProfile.bondLevel}</Text>
+              <View style={styles.bondTitleBadge}>
+                <Text style={styles.bondTitleText}>{naviProfile.bondTitle}</Text>
+              </View>
+            </View>
           </View>
 
           {naviProfile.unlockedFeatures.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Unlocked Abilities</Text>
+              <Text style={styles.sectionTitle}>Bond Abilities</Text>
               {naviProfile.unlockedFeatures.map((feature, index) => (
                 <View key={index} style={styles.featureCard}>
-                  <Sparkle size={18} color="#10b981" fill="#10b981" />
+                  <Sparkles size={18} color="#10b981" fill="#10b981" />
                   <Text style={styles.featureText}>{feature}</Text>
                 </View>
               ))}
             </View>
           )}
 
-          {naviProfile.bondLevel < 6 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Next Unlock</Text>
-              <View style={styles.lockedFeatureCard}>
-                <Lock size={18} color="#94a3b8" />
-                <Text style={styles.lockedFeatureText}>
-                  {naviProfile.bondLevel === 1 && 'Daily Emotional Sync (Bond Level 2)'}
-                  {naviProfile.bondLevel === 2 && 'Bond Memory Recall (Bond Level 3)'}
-                  {naviProfile.bondLevel === 3 && 'Navi Insight Forecast (Bond Level 4)'}
-                  {naviProfile.bondLevel === 4 && 'Navi Protective Mode (Bond Level 5)'}
-                  {naviProfile.bondLevel === 5 && 'Soul-Link Protocol (Bond Level 6)'}
-                </Text>
-              </View>
-            </View>
-          )}
-
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>{naviProfile.level}</Text>
-              <Text style={styles.statLabel}>Navi Level</Text>
+              <Text style={styles.statLabel}>Level</Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{naviProfile.xp}</Text>
-              <Text style={styles.statLabel}>XP</Text>
+            <View style={[styles.statCard, { backgroundColor: currentRank.color + '15' }]}>
+              <Text style={[styles.statValue, { color: currentRank.color }]}>{currentRank.name}</Text>
+              <Text style={styles.statLabel}>Rank</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>{naviProfile.interactionCount}</Text>
               <Text style={styles.statLabel}>Interactions</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{naviProfile.rank}</Text>
-              <Text style={styles.statLabel}>Rank</Text>
+              <Text style={styles.statValue}>{unlockedAbilities.length}</Text>
+              <Text style={styles.statLabel}>Abilities</Text>
             </View>
           </View>
 
@@ -224,7 +338,7 @@ export default function NaviScreen() {
           </View>
 
           <View style={styles.infoHint}>
-            <Text style={styles.infoHintText}>💡 Tap the Navi avatar above to start chatting!</Text>
+            <Text style={styles.infoHintText}>💡 Complete quests together to level up Navi!</Text>
           </View>
 
           <View style={styles.section}>
@@ -257,7 +371,7 @@ export default function NaviScreen() {
                   styles.miniMessageCard,
                   msg.role === 'user' ? styles.miniUserMessage : styles.miniAssistantMessage
                 ]}>
-                  {msg.role === 'assistant' && <Sparkle size={12} color="#6366f1" />}
+                  {msg.role === 'assistant' && <Sparkles size={12} color="#6366f1" />}
                   {msg.role === 'user' && <User size={12} color="#ffffff" />}
                   <Text style={[
                     styles.miniMessageText,
@@ -271,7 +385,7 @@ export default function NaviScreen() {
           </View>
 
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
+            <View style={styles.sectionHeaderRow}>
               <Brain size={20} color="#6366f1" />
               <Text style={styles.sectionTitle}>Relationship Memory</Text>
             </View>
@@ -291,7 +405,7 @@ export default function NaviScreen() {
               </View>
             ) : (
               <View style={styles.emptyMemoryState}>
-                <Text style={styles.emptyMemoryText}>No memories stored yet. Navi.EXE will learn about you as you chat.</Text>
+                <Text style={styles.emptyMemoryText}>No memories stored yet. Navi will learn about you as you chat.</Text>
               </View>
             )}
             <TouchableOpacity
@@ -348,7 +462,7 @@ export default function NaviScreen() {
           </View>
 
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
+            <View style={styles.sectionHeaderRow}>
               <MessageSquare size={20} color="#6366f1" />
               <Text style={styles.sectionTitle}>Navi.EXE State</Text>
             </View>
@@ -461,7 +575,6 @@ const styles = StyleSheet.create({
       },
     }),
   },
-
   naviName: {
     fontSize: 32,
     fontWeight: '800' as const,
@@ -469,41 +582,236 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     letterSpacing: 0.5,
   },
-  bondBadge: {
-    backgroundColor: '#fef3c7',
+  rankBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#fde68a',
+    marginBottom: 16,
+    borderWidth: 2,
+    gap: 6,
   },
-  bondText: {
-    fontSize: 13,
+  rankText: {
+    fontSize: 15,
     fontWeight: '700' as const,
-    color: '#92400e',
     letterSpacing: 0.3,
   },
-  personalityBadge: {
-    backgroundColor: '#e0e7ff',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
+  levelContainer: {
+    width: '100%',
+    alignItems: 'center',
   },
-  personalityText: {
-    fontSize: 12,
+  levelText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#0f172a',
+    marginBottom: 8,
+  },
+  xpBarContainer: {
+    width: '100%',
+    height: 10,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  xpBarFill: {
+    height: '100%',
+    backgroundColor: '#6366f1',
+    borderRadius: 5,
+  },
+  xpText: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 6,
     fontWeight: '600' as const,
-    color: '#4f46e5',
   },
   section: {
     marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: '800' as const,
     color: '#0f172a',
-    marginBottom: 16,
     letterSpacing: 0.3,
+  },
+  progressCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0f172a',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  levelProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  levelBadge: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  levelBadgeNext: {
+    backgroundColor: '#e0e7ff',
+  },
+  levelBadgeText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  levelBadgeTextNext: {
+    color: '#6366f1',
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  progressBarLarge: {
+    flex: 1,
+    height: 14,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 7,
+    overflow: 'hidden',
+  },
+  progressBarLargeFill: {
+    height: '100%',
+    backgroundColor: '#6366f1',
+    borderRadius: 7,
+  },
+  xpDetailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  totalXPText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#6366f1',
+  },
+  xpNeededText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '600' as const,
+  },
+  nextRankPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  nextRankText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500' as const,
+  },
+  nextRankName: {
+    fontWeight: '700' as const,
+  },
+  nextAbilityCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#f8fafc',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderStyle: 'dashed',
+  },
+  nextAbilityContent: {
+    flex: 1,
+  },
+  nextAbilityTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  nextAbilityDesc: {
+    fontSize: 13,
+    color: '#64748b',
+    lineHeight: 18,
+    marginBottom: 6,
+  },
+  nextAbilityLevel: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '600' as const,
+  },
+  abilitiesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  abilityCard: {
+    width: '48%',
+    borderRadius: 12,
+    padding: 12,
+    minHeight: 100,
+  },
+  abilityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  abilityLevel: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: '#64748b',
+  },
+  abilityName: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  abilityDesc: {
+    fontSize: 11,
+    color: '#64748b',
+    lineHeight: 15,
+  },
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+    gap: 4,
+  },
+  showMoreText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#6366f1',
+  },
+  rotateUp: {
+    transform: [{ rotate: '-90deg' }],
   },
   bondMetricCard: {
     backgroundColor: '#ffffff',
@@ -551,6 +859,32 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 8,
   },
+  bondBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  bondLevelLabel: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#92400e',
+  },
+  bondTitleBadge: {
+    backgroundColor: '#fde68a',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  bondTitleText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#92400e',
+  },
   featureCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -565,22 +899,6 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: 14,
     color: '#065f46',
-    fontWeight: '600' as const,
-    flex: 1,
-  },
-  lockedFeatureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  lockedFeatureText: {
-    fontSize: 14,
-    color: '#64748b',
     fontWeight: '600' as const,
     flex: 1,
   },
@@ -610,7 +928,7 @@ const styles = StyleSheet.create({
     }),
   },
   statValue: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800' as const,
     color: '#6366f1',
     marginBottom: 4,
@@ -718,12 +1036,6 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     fontSize: 14,
     color: '#64748b',
-    marginBottom: 12,
-  },
-  sectionHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
-    gap: 8,
     marginBottom: 12,
   },
   chatLogScroll: {

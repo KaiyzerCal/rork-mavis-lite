@@ -6,6 +6,7 @@ import { INITIAL_STATE } from '@/constants/seedData';
 import type { AppState, CharacterClass, JournalEntry, Quest, Skill, SubSkill, MBTIType, ChatThread, ChatMessage, CouncilMember, VaultEntry, DailyCheckIn, NaviProfile, NaviPersonalityPreset, NaviSkin, NaviMode, MemoryItem, BondTitle, NaviPersonalityState, BondFeature, SessionSummary } from '@/types';
 import { MBTI_TO_ARCHETYPE, ARCHETYPE_DATA } from '@/constants/archetypes';
 import { checkHiddenClassUnlock } from '@/constants/hiddenClasses';
+import { calculateNaviLevelFromXP, getNaviRank, getQuestXPForNavi, getInteractionXP, getQuestCompletionBonus } from '@/constants/naviLeveling';
 
 function isValidArray<T>(value: unknown): value is T[] {
   return Array.isArray(value) && value !== null && value !== undefined;
@@ -423,12 +424,40 @@ export const [AppProvider, useApp] = createContextHook(() => {
         });
       }
 
+      const completedMilestones = quest.milestones.filter(m => m.completed).length;
+      const naviXPFromQuest = getQuestXPForNavi(quest.difficulty, quest.xpReward);
+      const naviXPBonus = getQuestCompletionBonus(completedMilestones, quest.milestones.length);
+      const totalNaviXP = naviXPFromQuest + naviXPBonus;
+      
+      const currentNaviProfile = prev.settings.navi.profile;
+      const newNaviXP = currentNaviProfile.xp + totalNaviXP;
+      const newNaviLevel = calculateNaviLevelFromXP(newNaviXP);
+      const newNaviRank = getNaviRank(newNaviLevel);
+      
+      console.log(`[Navi] 🎮 Quest completed! Navi gained ${totalNaviXP} XP (${naviXPFromQuest} from quest + ${naviXPBonus} bonus)`);
+      console.log(`[Navi] 📊 XP: ${currentNaviProfile.xp} → ${newNaviXP}, Level: ${currentNaviProfile.level} → ${newNaviLevel}`);
+      
+      if (newNaviLevel > currentNaviProfile.level) {
+        console.log(`[Navi] 🎉 LEVEL UP! Navi is now Level ${newNaviLevel} - ${newNaviRank.name}!`);
+      }
+
       return {
         ...prev,
         user: updatedUser,
         quests: updatedQuests,
         leaderboard: updatedLeaderboard,
         skills: updatedSkills,
+        settings: {
+          ...prev.settings,
+          navi: {
+            profile: {
+              ...currentNaviProfile,
+              xp: newNaviXP,
+              level: newNaviLevel,
+              rank: newNaviRank.name,
+            },
+          },
+        },
       };
     });
   }, [state.quests]);
@@ -778,19 +807,65 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, []);
 
   const incrementNaviInteraction = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      settings: {
-        ...prev.settings,
-        navi: {
-          profile: {
-            ...prev.settings.navi.profile,
-            interactionCount: prev.settings.navi.profile.interactionCount + 1,
-            lastInteraction: new Date().toISOString(),
+    setState((prev) => {
+      const currentProfile = prev.settings.navi.profile;
+      const interactionXP = getInteractionXP();
+      const newXP = currentProfile.xp + interactionXP;
+      const newLevel = calculateNaviLevelFromXP(newXP);
+      const newRank = getNaviRank(newLevel);
+      
+      if (newLevel > currentProfile.level) {
+        console.log(`[Navi] 🎉 LEVEL UP from interaction! Navi is now Level ${newLevel} - ${newRank.name}!`);
+      }
+      
+      return {
+        ...prev,
+        settings: {
+          ...prev.settings,
+          navi: {
+            profile: {
+              ...currentProfile,
+              interactionCount: currentProfile.interactionCount + 1,
+              lastInteraction: new Date().toISOString(),
+              xp: newXP,
+              level: newLevel,
+              rank: newRank.name,
+            },
           },
         },
-      },
-    }));
+      };
+    });
+  }, []);
+
+  const addNaviXP = useCallback((amount: number, reason?: string) => {
+    setState((prev) => {
+      const currentProfile = prev.settings.navi.profile;
+      const newXP = currentProfile.xp + amount;
+      const newLevel = calculateNaviLevelFromXP(newXP);
+      const newRank = getNaviRank(newLevel);
+      
+      console.log(`[Navi] ⭐ Gained ${amount} XP${reason ? ` (${reason})` : ''}`);
+      console.log(`[Navi] 📊 XP: ${currentProfile.xp} → ${newXP}`);
+      
+      if (newLevel > currentProfile.level) {
+        console.log(`[Navi] 🎉 LEVEL UP! Navi is now Level ${newLevel} - ${newRank.name}!`);
+      }
+      
+      return {
+        ...prev,
+        settings: {
+          ...prev.settings,
+          navi: {
+            profile: {
+              ...currentProfile,
+              xp: newXP,
+              level: newLevel,
+              rank: newRank.name,
+            },
+          },
+        },
+      };
+    });
   }, []);
 
   const addMemoryItem = useCallback((item: Omit<MemoryItem, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -1189,6 +1264,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateNaviName,
     resetCharacterClass,
     incrementNaviInteraction,
+    addNaviXP,
     addMemoryItem,
     updateMemoryItem,
     deleteMemoryItem,
@@ -1198,5 +1274,5 @@ export const [AppProvider, useApp] = createContextHook(() => {
     incrementBondOnPositiveEngagement,
     incrementBondOnEmotionalDisclosure,
     omnisync,
-  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, omnisync]);
+  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, omnisync]);
 });
