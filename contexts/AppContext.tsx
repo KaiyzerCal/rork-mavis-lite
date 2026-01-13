@@ -489,59 +489,77 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [calculateLevel]);
 
   const saveChatMessage = useCallback((message: ChatMessage) => {
-    const fullContent = message.full_output || message.content || '';
+    const content = message.full_output || message.content || '';
     
-    if (!fullContent || fullContent.trim().length === 0) {
-      console.warn('[AppContext] ⚠️ Empty message, skipping save');
+    if (!content || content.trim().length === 0) {
+      console.warn('[AppContext] ⚠️ Empty message content, skipping save');
       return;
     }
     
-    console.log('[AppContext] 💾 Saving chat message:', message.id, message.role, fullContent.length, 'chars');
-    
-    const messageToSave: ChatMessage = {
-      id: message.id,
-      role: message.role,
-      content: fullContent,
-      full_output: fullContent,
-      timestamp: message.timestamp || new Date().toISOString(),
-      output_tokens: fullContent.length,
-      is_summary: false,
-      metadata: {
-        ...message.metadata,
-        contentLength: fullContent.length,
-        savedAt: new Date().toISOString(),
-        persistVersion: 'v5',
-      },
-    };
+    console.log('[AppContext] 💾 === SAVING MESSAGE ===' );
+    console.log('[AppContext] 💾 ID:', message.id);
+    console.log('[AppContext] 💾 Role:', message.role);
+    console.log('[AppContext] 💾 Content length:', content.length);
+    console.log('[AppContext] 💾 Preview:', content.substring(0, 100));
     
     setState((prev) => {
       const chatHistory = safeArray<ChatThread>(prev.chatHistory, []);
-      const currentThread = chatHistory[0] || {
-        id: `thread-${Date.now()}`,
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      
+      let currentThread = chatHistory[0];
+      if (!currentThread || !currentThread.id) {
+        currentThread = {
+          id: `thread-${Date.now()}`,
+          messages: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        console.log('[AppContext] 💾 Created new thread:', currentThread.id);
+      }
 
-      const existingIds = new Set(currentThread.messages.map(m => m.id));
-      if (existingIds.has(message.id)) {
-        console.log('[AppContext] ⚠️ Message already exists:', message.id);
+      const existingMessages = currentThread.messages || [];
+      const messageExists = existingMessages.some(m => m.id === message.id);
+      
+      if (messageExists) {
+        console.log('[AppContext] ⚠️ Message already exists, skipping:', message.id);
         return prev;
       }
 
+      const messageToSave: ChatMessage = {
+        id: message.id,
+        role: message.role,
+        content: content,
+        full_output: content,
+        timestamp: message.timestamp || new Date().toISOString(),
+        output_tokens: content.length,
+        is_summary: false,
+        metadata: {
+          ...(message.metadata || {}),
+          savedAt: new Date().toISOString(),
+          persistVersion: 'v8',
+        },
+      };
+
+      const updatedMessages = [...existingMessages, messageToSave];
+      
       const updatedThread: ChatThread = {
         ...currentThread,
-        messages: [...currentThread.messages, messageToSave],
+        messages: updatedMessages,
         updatedAt: new Date().toISOString(),
       };
 
       const otherThreads = chatHistory.slice(1);
+      const newChatHistory = [updatedThread, ...otherThreads];
       
-      console.log('[AppContext] ✅ Message saved. Thread now has', updatedThread.messages.length, 'messages');
+      const userCount = updatedMessages.filter(m => m.role === 'user').length;
+      const assistantCount = updatedMessages.filter(m => m.role === 'assistant').length;
+      
+      console.log('[AppContext] ✅ MESSAGE SAVED');
+      console.log('[AppContext] ✅ Thread now has', updatedMessages.length, 'messages');
+      console.log('[AppContext] ✅ User:', userCount, '| Assistant:', assistantCount);
       
       return {
         ...prev,
-        chatHistory: [updatedThread, ...otherThreads],
+        chatHistory: newChatHistory,
       };
     });
   }, []);
