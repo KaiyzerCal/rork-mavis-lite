@@ -1,5 +1,5 @@
 import { useRorkAgent } from '@rork-ai/toolkit-sdk';
-import { Sparkle, Send, CheckCircle, XCircle, Target, Zap, Plus, Mic, MicOff, Volume2, VolumeX } from 'lucide-react-native';
+import { Sparkle, Send, CheckCircle, XCircle, Target, Zap, Plus, Mic, MicOff, Volume2, VolumeX, Copy } from 'lucide-react-native';
 import { Audio } from 'expo-av';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useApp } from '@/contexts/AppContext';
 import { useNaviAPI } from '@/contexts/NaviAPIContext';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface StoredMessage {
   id: string;
@@ -691,29 +692,45 @@ Total messages in history: ${displayMessages.length}`;
                         <Text style={[styles.messageText, styles.assistantMessageText]}>
                           {msg.content}
                         </Text>
-                        <TouchableOpacity
-                          style={styles.speakerButton}
-                          onPress={() => {
-                            if (currentlyPlayingId === msg.id) {
-                              stopSpeaking();
-                            } else {
-                              speakText(msg.content, msg.id);
-                            }
-                          }}
-                        >
-                          {currentlyPlayingId === msg.id ? (
-                            <VolumeX size={14} color="#ef4444" />
-                          ) : (
-                            <Volume2 size={14} color="#94a3b8" />
-                          )}
-                        </TouchableOpacity>
+                        <View style={styles.messageActions}>
+                          <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => copyToClipboard(msg.content)}
+                          >
+                            <Copy size={14} color="#6366f1" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => {
+                              if (currentlyPlayingId === msg.id) {
+                                stopSpeaking();
+                              } else {
+                                speakText(msg.content, msg.id);
+                              }
+                            }}
+                          >
+                            {currentlyPlayingId === msg.id ? (
+                              <VolumeX size={14} color="#ef4444" />
+                            ) : (
+                              <Volume2 size={14} color="#94a3b8" />
+                            )}
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     </View>
                   ) : (
                     <View style={[styles.messageCard, styles.userMessage]}>
-                      <Text style={[styles.messageText, styles.userMessageText]}>
-                        {msg.content}
-                      </Text>
+                      <View style={styles.messageContentUser}>
+                        <Text style={[styles.messageText, styles.userMessageText]}>
+                          {msg.content}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.userActionButton}
+                          onPress={() => copyToClipboard(msg.content)}
+                        >
+                          <Copy size={14} color="rgba(255,255,255,0.8)" />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   )}
                 </View>
@@ -1042,11 +1059,31 @@ const styles = StyleSheet.create({
   },
   messageContent: {
     flex: 1,
-    flexShrink: 1,
+  },
+  messageContentUser: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  messageActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  actionButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+  },
+  userActionButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   messageText: {
     fontSize: 15,
     lineHeight: 22,
+    flex: 1,
   },
   userMessageText: {
     color: '#ffffff',

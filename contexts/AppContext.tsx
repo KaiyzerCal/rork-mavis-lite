@@ -1026,6 +1026,56 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
   }, [addRelationshipMemory]);
 
+  const addFile = useCallback((file: Omit<AppFile, 'id' | 'createdAt'>) => {
+    const newFile: AppFile = {
+      ...file,
+      id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setState((prev) => ({
+      ...prev,
+      files: [newFile, ...prev.files],
+    }));
+    console.log('[Files] 📁 Added file:', newFile.name);
+    return newFile;
+  }, []);
+
+  const deleteFile = useCallback((fileId: string) => {
+    setState((prev) => ({
+      ...prev,
+      files: prev.files.filter((f) => f.id !== fileId),
+    }));
+    console.log('[Files] 🗑️ Deleted file:', fileId);
+  }, []);
+
+  const updateFile = useCallback((fileId: string, updates: Partial<AppFile>) => {
+    setState((prev) => ({
+      ...prev,
+      files: prev.files.map((f) => (f.id === fileId ? { ...f, ...updates } : f)),
+    }));
+  }, []);
+
+  const addGeneratedImage = useCallback((image: Omit<GeneratedImage, 'id' | 'createdAt'>) => {
+    const newImage: GeneratedImage = {
+      ...image,
+      id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setState((prev) => ({
+      ...prev,
+      generatedImages: [newImage, ...prev.generatedImages],
+    }));
+    console.log('[Images] 🎨 Generated image added');
+    return newImage;
+  }, []);
+
+  const deleteGeneratedImage = useCallback((imageId: string) => {
+    setState((prev) => ({
+      ...prev,
+      generatedImages: prev.generatedImages.filter((img) => img.id !== imageId),
+    }));
+  }, []);
+
   const extractMemoriesFromConversation = useCallback((messages: ChatMessage[]): MemoryItem[] => {
     console.log('[MEMORY EXTRACT] Analyzing conversation for important memories...');
     const extractedMemories: MemoryItem[] = [];
@@ -1307,5 +1357,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     addRelationshipMemory,
     extractAndStoreMemoriesFromMessage,
     omnisync,
-  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, addRelationshipMemory, extractAndStoreMemoriesFromMessage, omnisync]);
+    addFile,
+    deleteFile,
+    updateFile,
+    addGeneratedImage,
+    deleteGeneratedImage,
+  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, addRelationshipMemory, extractAndStoreMemoriesFromMessage, omnisync, addFile, deleteFile, updateFile, addGeneratedImage, deleteGeneratedImage]);
 });

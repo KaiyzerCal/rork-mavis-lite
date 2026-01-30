@@ -156,4 +156,6 @@ export const INITIAL_STATE: AppState = {
     lastSessionAt: new Date().toISOString(),
     totalMessages: 0,
   },
+  files: [],
+  generatedImages: [],
 };

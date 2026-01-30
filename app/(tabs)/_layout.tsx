@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Target, Sparkle, Shield, BookOpen, Settings as SettingsIcon } from "lucide-react-native";
+import { Home, Target, Sparkle, Shield, BookOpen, Settings as SettingsIcon, Files } from "lucide-react-native";
 import React from "react";
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -57,6 +57,13 @@ export default function TabLayout() {
         options={{
           title: "Vault",
           tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="files"
+        options={{
+          title: "Files",
+          tabBarIcon: ({ color, size }) => <Files color={color} size={size} />,
         }}
       />
       <Tabs.Screen

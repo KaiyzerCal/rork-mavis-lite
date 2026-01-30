@@ -379,6 +379,30 @@ export interface NaviState {
   totalMessages: number;
 }
 
+export type FileType = 'txt' | 'doc' | 'pdf' | 'image' | 'other';
+
+export interface AppFile {
+  id: string;
+  name: string;
+  type: FileType;
+  uri: string;
+  size: number;
+  mimeType: string;
+  createdAt: string;
+  tags: string[];
+  notes?: string;
+  thumbnail?: string;
+}
+
+export interface GeneratedImage {
+  id: string;
+  prompt: string;
+  url: string;
+  createdAt: string;
+  size: string;
+  tags: string[];
+}
+
 export interface AppState {
   user: User;
   skills: Skill[];
@@ -399,4 +423,6 @@ export interface AppState {
   sessionSummaries: SessionSummary[];
   relationshipMemories: RelationshipMemory[];
   naviState: NaviState;
+  files: AppFile[];
+  generatedImages: GeneratedImage[];
 }
