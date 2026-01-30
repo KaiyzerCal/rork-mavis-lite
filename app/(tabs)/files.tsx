@@ -16,15 +16,12 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { 
   Files, 
-  Plus, 
   X, 
   FileText, 
   Image as ImageIcon,
-  Download,
   Trash2,
   Upload,
   Search,
-  Filter,
   File,
   Camera,
   ImagePlus,
@@ -44,7 +41,7 @@ const FILE_TYPE_CONFIG = {
 
 export default function FilesManagerScreen() {
   const insets = useSafeAreaInsets();
-  const { state, addFile, deleteFile, updateFile, addGeneratedImage, deleteGeneratedImage } = useApp();
+  const { state, addFile, deleteFile, deleteGeneratedImage } = useApp();
   const [activeTab, setActiveTab] = useState<'files' | 'images'>('files');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<AppFile | null>(null);
@@ -72,7 +69,7 @@ export default function FilesManagerScreen() {
       else if (fileExtension === 'pdf') fileType = 'pdf';
       else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) fileType = 'image';
 
-      const newFile = addFile({
+      addFile({
         name: asset.name,
         type: fileType,
         uri: asset.uri,
