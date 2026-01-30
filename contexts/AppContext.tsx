@@ -3,7 +3,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { INITIAL_STATE } from '@/constants/seedData';
-import type { AppState, CharacterClass, JournalEntry, Quest, Skill, SubSkill, MBTIType, ChatThread, ChatMessage, CouncilMember, VaultEntry, DailyCheckIn, NaviProfile, NaviPersonalityPreset, NaviSkin, NaviMode, MemoryItem, BondTitle, NaviPersonalityState, BondFeature, SessionSummary, RelationshipMemory } from '@/types';
+import type { AppState, CharacterClass, JournalEntry, Quest, Skill, SubSkill, MBTIType, ChatThread, ChatMessage, CouncilMember, VaultEntry, DailyCheckIn, NaviProfile, NaviPersonalityPreset, NaviSkin, NaviMode, MemoryItem, BondTitle, NaviPersonalityState, BondFeature, SessionSummary, RelationshipMemory, AppFile, GeneratedImage } from '@/types';
 import { MBTI_TO_ARCHETYPE, ARCHETYPE_DATA } from '@/constants/archetypes';
 import { checkHiddenClassUnlock } from '@/constants/hiddenClasses';
 import { calculateNaviLevelFromXP, getNaviRank, getQuestXPForNavi, getInteractionXP, getQuestCompletionBonus, getBondLevel, getMemoryExtractionPatterns, BOND_LEVELS } from '@/constants/naviLeveling';
