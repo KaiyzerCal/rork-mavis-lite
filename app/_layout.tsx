@@ -2,10 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { View } from "react-native";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { AppProvider } from "@/contexts/AppContext";
+import { AppProvider, useApp } from "@/contexts/AppContext";
 import { NaviAPIProvider } from "@/contexts/NaviAPIContext";
 import { ProposalProvider } from "@/contexts/ProposalContext";
 import { BackendSyncProvider } from "@/contexts/BackendSyncContext";
@@ -23,17 +23,27 @@ function RootLayoutNav() {
   );
 }
 
-function AppProviders({ children }: { children: React.ReactNode }) {
+function AppContent() {
+  const { isLoaded } = useApp();
+
+  if (!isLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
   return (
-    <AppProvider>
-      <BackendSyncProvider>
-        <NaviAPIProvider>
-          <ProposalProvider>
-            {children}
-          </ProposalProvider>
-        </NaviAPIProvider>
-      </BackendSyncProvider>
-    </AppProvider>
+    <BackendSyncProvider>
+      <NaviAPIProvider>
+        <ProposalProvider>
+          <View style={{ flex: 1 }}>
+            <RootLayoutNav />
+          </View>
+        </ProposalProvider>
+      </NaviAPIProvider>
+    </BackendSyncProvider>
   );
 }
 
@@ -46,13 +56,20 @@ export default function RootLayout() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <AppProviders>
-            <View style={{ flex: 1 }}>
-              <RootLayoutNav />
-            </View>
-          </AppProviders>
+          <AppProvider>
+            <AppContent />
+          </AppProvider>
         </trpc.Provider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+});
