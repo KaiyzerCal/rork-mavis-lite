@@ -410,6 +410,27 @@ export default function VaultScreen() {
             );
           })}
         </ScrollView>
+
+        <View style={styles.mainTabsContainer}>
+          <TouchableOpacity
+            style={[styles.mainTab, mainTab === 'entries' && styles.mainTabActive]}
+            onPress={() => setMainTab('entries')}
+          >
+            <Archive size={18} color={mainTab === 'entries' ? '#6366f1' : '#64748b'} />
+            <Text style={[styles.mainTabText, mainTab === 'entries' && styles.mainTabTextActive]}>
+              Entries
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.mainTab, mainTab === 'files' && styles.mainTabActive]}
+            onPress={() => setMainTab('files')}
+          >
+            <Files size={18} color={mainTab === 'files' ? '#6366f1' : '#64748b'} />
+            <Text style={[styles.mainTabText, mainTab === 'files' && styles.mainTabTextActive]}>
+              Files
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView 
@@ -439,13 +460,8 @@ export default function VaultScreen() {
             </TouchableOpacity>
           </View>
         )}
-      </View>
 
-      <ScrollView 
-        style={styles.content} 
-        contentContainerStyle={styles.contentContainer} 
-        showsVerticalScrollIndicator={false}
-      >
+
         {mainTab === 'entries' ? (
           <>
             {filteredEntries.length === 0 ? (
