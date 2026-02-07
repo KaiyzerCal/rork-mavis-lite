@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SQLiteStorage } from '@/lib/storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -30,7 +30,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     if (isLoaded) {
       const saveState = async () => {
         try {
-          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          await SQLiteStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } catch (error) {
           console.error('Failed to save state:', error);
         }
@@ -41,8 +41,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const loadState = async () => {
     try {
-      console.log('[AppContext] 💾 Loading state from AsyncStorage...');
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      console.log('[AppContext] 💾 Loading state from SQLite...');
+      const stored = await SQLiteStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         console.log('[AppContext] 💾 Parsed state, checking chatHistory...');
@@ -1259,19 +1259,19 @@ export const [AppProvider, useApp] = createContextHook(() => {
       
       console.log('[OMNISYNC] Creating state snapshot:', snapshot);
       
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
-      console.log('[OMNISYNC] State saved to AsyncStorage');
+      await SQLiteStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
+      console.log('[OMNISYNC] State saved to SQLite');
       
       const rollbackKey = `${STORAGE_KEY}_backup_${Date.now()}`;
-      await AsyncStorage.setItem(rollbackKey, JSON.stringify(updatedState));
+      await SQLiteStorage.setItem(rollbackKey, JSON.stringify(updatedState));
       console.log('[OMNISYNC] Rollback snapshot created:', rollbackKey);
       
-      const allKeys = await AsyncStorage.getAllKeys();
+      const allKeys = await SQLiteStorage.getAllKeys();
       const backupKeys = allKeys.filter(key => key.startsWith(`${STORAGE_KEY}_backup_`));
       if (backupKeys.length > 3) {
         const sortedKeys = backupKeys.sort();
         const toDelete = sortedKeys.slice(0, sortedKeys.length - 3);
-        await AsyncStorage.multiRemove(toDelete);
+        await SQLiteStorage.multiRemove(toDelete);
         console.log('[OMNISYNC] Cleaned up old backups:', toDelete.length);
       }
       
