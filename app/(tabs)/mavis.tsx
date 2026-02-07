@@ -1294,6 +1294,41 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: '#e2e8f0',
   },
+  stopButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#ef4444',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    marginLeft: 8,
+  },
+  pasteButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    marginRight: 4,
+  },
+  typingIndicator: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    paddingVertical: 8,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#cbd5e1',
+  },
+  typingDotDelay1: {
+    opacity: 0.7,
+  },
+  typingDotDelay2: {
+    opacity: 0.4,
+  },
   voiceButton: {
     width: 36,
     height: 36,

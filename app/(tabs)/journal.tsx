@@ -10,9 +10,10 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, X, Smile, Frown, Meh, Battery, BatteryLow } from 'lucide-react-native';
+import { Plus, X, Smile, Frown, Meh, Battery, BatteryLow, Copy } from 'lucide-react-native';
 
 import { useApp } from '@/contexts/AppContext';
+import { copyToClipboard } from '@/lib/clipboard';
 
 const MOOD_ICONS = [
   { value: 1, icon: Frown, color: '#ef4444' },
@@ -127,7 +128,16 @@ export default function Journal() {
                       </View>
                     </View>
                   </View>
-                  <Text style={styles.entryText}>{entry.text}</Text>
+                  <View style={styles.entryTextRow}>
+                    <Text style={styles.entryText}>{entry.text}</Text>
+                    <TouchableOpacity
+                      style={styles.copyEntryButton}
+                      onPress={() => copyToClipboard(`${entry.date} | Mood: ${entry.mood}/10 | Energy: ${entry.energy}/10\n\n${entry.text}`)}
+                      activeOpacity={0.7}
+                    >
+                      <Copy size={14} color="#94a3b8" />
+                    </TouchableOpacity>
+                  </View>
                   {entry.tags.length > 0 && (
                     <View style={styles.tags}>
                       {entry.tags.map((tag, tagIdx) => (
@@ -391,10 +401,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600' as const,
   },
+  entryTextRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start',
+    gap: 8,
+  },
   entryText: {
     fontSize: 15,
     color: '#0f172a',
     lineHeight: 22,
+    flex: 1,
+  },
+  copyEntryButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+    marginTop: 2,
   },
   tags: {
     flexDirection: 'row',

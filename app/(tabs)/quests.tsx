@@ -13,9 +13,10 @@ import {
   ActionSheetIOS,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Target, Sparkle, CheckCircle, XCircle, Zap, Edit2, Trash2, Check, Plus, X, ChevronDown } from 'lucide-react-native';
+import { Target, Sparkle, CheckCircle, XCircle, Zap, Edit2, Trash2, Check, Plus, X, ChevronDown, Copy } from 'lucide-react-native';
 
 import { useApp } from '@/contexts/AppContext';
+import { copyToClipboard } from '@/lib/clipboard';
 import { QUEST_DIFFICULTIES, QUEST_DIFFICULTY_LABELS, QUEST_DIFFICULTY_DESCRIPTIONS, QUEST_XP_VALUES, QuestDifficulty } from '@/constants/questCategories';
 
 export default function Quests() {
@@ -162,7 +163,16 @@ export default function Quests() {
           )}
         </View>
 
-        <Text style={styles.questTitle}>{quest.title}</Text>
+        <View style={styles.questTitleRow}>
+          <Text style={styles.questTitle}>{quest.title}</Text>
+          <TouchableOpacity
+            style={styles.copyQuestButton}
+            onPress={() => copyToClipboard(`${quest.title}\n${quest.description}\n\nMilestones:\n${quest.milestones.map(m => `${m.completed ? '✅' : '⬜'} ${m.description}`).join('\n')}\n\nXP: ${quest.xpReward}`)}
+            activeOpacity={0.7}
+          >
+            <Copy size={14} color="#94a3b8" />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.questDescription}>{quest.description}</Text>
 
         <View style={styles.questMilestones}>
@@ -970,11 +980,24 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: '#166534',
   },
+  questTitleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   questTitle: {
     fontSize: 22,
     fontWeight: '700' as const,
     color: '#0f172a',
     marginBottom: 8,
+    flex: 1,
+  },
+  copyQuestButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+    marginTop: 2,
   },
   questDescription: {
     fontSize: 17,
