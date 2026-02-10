@@ -28,7 +28,7 @@ import {
 
 export default function NaviScreen() {
   const insets = useSafeAreaInsets();
-  const { state, omnisync, getChatHistory } = useApp();
+  const { state, omnisync, getChatHistory, ltmBlocks } = useApp();
   const naviProfile = state.settings.navi.profile;
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [showMemoryForm, setShowMemoryForm] = useState<boolean>(false);
@@ -64,7 +64,8 @@ export default function NaviScreen() {
           `• Memories: ${result.snapshot.memoryCount}\n` +
           `• Vault Entries: ${result.snapshot.vaultCount}\n` +
           `• Chat Messages: ${result.snapshot.chatCount}\n` +
-          `• Bond Level: ${result.snapshot.bondLevel}`,
+          `• Bond Level: ${result.snapshot.bondLevel}\n` +
+          `• LTM Blocks: ${result.snapshot.ltmBlocks}`,
           [{ text: 'OK' }]
         );
       } else {
@@ -343,6 +344,14 @@ export default function NaviScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>System Control</Text>
+            {ltmBlocks.length > 0 && (
+              <View style={styles.ltmStatusCard}>
+                <Brain size={16} color="#8b5cf6" />
+                <Text style={styles.ltmStatusText}>
+                  {ltmBlocks.length} memory blocks | {ltmBlocks.reduce((s, b) => s + b.details.length, 0)} total facts stored
+                </Text>
+              </View>
+            )}
             <TouchableOpacity
               style={[styles.omnisyncButton, isSyncing && styles.omnisyncButtonDisabled]}
               onPress={handleOmnisync}
@@ -1205,5 +1214,23 @@ const styles = StyleSheet.create({
     color: '#92400e',
     textAlign: 'center' as const,
     fontWeight: '600' as const,
+  },
+  ltmStatusCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#ede9fe',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 12,
+    marginBottom: 8,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#c4b5fd',
+  },
+  ltmStatusText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#6d28d9',
+    flex: 1,
   },
 });

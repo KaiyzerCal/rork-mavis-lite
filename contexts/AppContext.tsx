@@ -1,12 +1,13 @@
 import { SQLiteStorage } from '@/lib/storage';
 import createContextHook from '@nkzw/create-context-hook';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { INITIAL_STATE } from '@/constants/seedData';
 import type { AppState, CharacterClass, JournalEntry, Quest, Skill, SubSkill, MBTIType, ChatThread, ChatMessage, CouncilMember, VaultEntry, DailyCheckIn, NaviProfile, NaviPersonalityPreset, NaviSkin, NaviMode, MemoryItem, BondTitle, NaviPersonalityState, BondFeature, SessionSummary, RelationshipMemory, AppFile, GeneratedImage } from '@/types';
 import { MBTI_TO_ARCHETYPE, ARCHETYPE_DATA } from '@/constants/archetypes';
 import { checkHiddenClassUnlock } from '@/constants/hiddenClasses';
 import { calculateNaviLevelFromXP, getNaviRank, getQuestXPForNavi, getInteractionXP, getQuestCompletionBonus, getBondLevel, getMemoryExtractionPatterns, BOND_LEVELS } from '@/constants/naviLeveling';
+import { compressMemories, loadLongTermMemory, saveLongTermMemory, buildSystemStateBlock, buildCompactMemoryContext, type CompressedMemoryBlock, type LongTermMemoryStore } from '@/lib/memoryEngine';
 
 function isValidArray<T>(value: unknown): value is T[] {
   return Array.isArray(value) && value !== null && value !== undefined;
@@ -21,10 +22,28 @@ const STORAGE_KEY = '@mavis_lite_state';
 export const [AppProvider, useApp] = createContextHook(() => {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [ltmBlocks, setLtmBlocks] = useState<CompressedMemoryBlock[]>([]);
+  const ltmLoadedRef = useRef<boolean>(false);
 
   useEffect(() => {
     loadState();
+    loadLTM();
   }, []);
+
+  const loadLTM = async () => {
+    try {
+      console.log('[AppContext] Loading long-term memory...');
+      const ltm = await loadLongTermMemory();
+      if (ltm.blocks.length > 0) {
+        setLtmBlocks(ltm.blocks);
+        console.log('[AppContext] Loaded', ltm.blocks.length, 'LTM blocks');
+      }
+      ltmLoadedRef.current = true;
+    } catch (error) {
+      console.error('[AppContext] Failed to load LTM:', error);
+      ltmLoadedRef.current = true;
+    }
+  };
 
   useEffect(() => {
     if (isLoaded) {
@@ -1197,6 +1216,14 @@ export const [AppProvider, useApp] = createContextHook(() => {
     };
   }, []);
 
+  const getSystemStateBlock = useCallback((): string => {
+    return buildSystemStateBlock(state, ltmBlocks);
+  }, [state, ltmBlocks]);
+
+  const getMemoryContext = useCallback((): string => {
+    return buildCompactMemoryContext(ltmBlocks);
+  }, [ltmBlocks]);
+
   const omnisync = useCallback(async (): Promise<{
     success: boolean;
     message: string;
@@ -1209,6 +1236,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       vaultCount: number;
       chatCount: number;
       bondLevel: number;
+      ltmBlocks: number;
     };
   }> => {
     try {
@@ -1236,14 +1264,35 @@ export const [AppProvider, useApp] = createContextHook(() => {
         };
       }
       
+      let updatedSummaries = safeArray<SessionSummary>(state.sessionSummaries, []);
       if (sessionSummary && allMessages.length >= 10) {
         console.log('[OMNISYNC] Creating session summary');
-        const existingSummaries = safeArray<SessionSummary>(state.sessionSummaries, []);
+        updatedSummaries = [...updatedSummaries, sessionSummary];
         updatedState = {
           ...updatedState,
-          sessionSummaries: [...existingSummaries, sessionSummary],
+          sessionSummaries: updatedSummaries,
         };
       }
+      
+      console.log('[OMNISYNC] Compressing memories to long-term storage...');
+      const compressedBlocks = compressMemories(
+        safeArray<MemoryItem>(updatedState.memoryItems, []),
+        safeArray<RelationshipMemory>(updatedState.relationshipMemories, []),
+        updatedSummaries,
+        ltmBlocks
+      );
+      
+      const ltmStore: LongTermMemoryStore = {
+        version: 2,
+        lastCompressed: new Date().toISOString(),
+        blocks: compressedBlocks,
+        rawMemoryCount: (updatedState.memoryItems?.length || 0) + (updatedState.relationshipMemories?.length || 0),
+        compressionRuns: (ltmBlocks.length > 0 ? 1 : 0) + 1,
+      };
+      
+      await saveLongTermMemory(ltmStore);
+      setLtmBlocks(compressedBlocks);
+      console.log('[OMNISYNC] Long-term memory compressed:', compressedBlocks.length, 'blocks with', compressedBlocks.reduce((s, b) => s + b.details.length, 0), 'total details');
       
       setState(updatedState);
       
@@ -1255,6 +1304,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
         vaultCount: state.vault.length,
         chatCount: allMessages.length,
         bondLevel: state.settings.navi.profile.bondLevel,
+        ltmBlocks: compressedBlocks.length,
       };
       
       console.log('[OMNISYNC] Creating state snapshot:', snapshot);
@@ -1279,7 +1329,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       
       return {
         success: true,
-        message: 'Mavis-Lite Omnisync Complete. All systems, memory, and identity layers synchronized.',
+        message: `Omnisync Complete. ${compressedBlocks.length} memory blocks compressed. All systems synchronized.`,
         timestamp,
         snapshot,
       };
@@ -1297,14 +1347,18 @@ export const [AppProvider, useApp] = createContextHook(() => {
           vaultCount: 0,
           chatCount: 0,
           bondLevel: 0,
+          ltmBlocks: 0,
         },
       };
     }
-  }, [state, extractMemoriesFromConversation, createSessionSummary]);
+  }, [state, extractMemoriesFromConversation, createSessionSummary, ltmBlocks]);
 
   return useMemo(() => ({
     state,
     isLoaded,
+    ltmBlocks,
+    getSystemStateBlock,
+    getMemoryContext,
     addJournalEntry,
     addSkill,
     updateSkill,
@@ -1362,5 +1416,5 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateFile,
     addGeneratedImage,
     deleteGeneratedImage,
-  }), [state, isLoaded, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, addRelationshipMemory, extractAndStoreMemoriesFromMessage, omnisync, addFile, deleteFile, updateFile, addGeneratedImage, deleteGeneratedImage]);
+  }), [state, isLoaded, ltmBlocks, getSystemStateBlock, getMemoryContext, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, addRelationshipMemory, extractAndStoreMemoriesFromMessage, omnisync, addFile, deleteFile, updateFile, addGeneratedImage, deleteGeneratedImage]);
 });

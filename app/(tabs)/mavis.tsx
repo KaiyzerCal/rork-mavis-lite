@@ -59,12 +59,10 @@ export default function NaviChatScreen() {
   const [autoSpeak, setAutoSpeak] = useState(false);
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
   
-  const { state, isLoaded, acceptQuest, declineQuest, saveChatMessage, getChatHistory, addQuest, extractAndStoreMemoriesFromMessage } = useApp();
+  const { state, isLoaded, acceptQuest, declineQuest, saveChatMessage, getChatHistory, addQuest, extractAndStoreMemoriesFromMessage, getSystemStateBlock, getMemoryContext } = useApp();
   const naviAPI = useNaviAPI();
 
   const naviName = state.settings.navi.profile.name || 'Navi.EXE';
-  const activeQuests = useMemo(() => state.quests.filter(q => q.status === 'active'), [state.quests]);
-  const completedQuests = useMemo(() => state.quests.filter(q => q.status === 'completed'), [state.quests]);
   const pendingQuests = useMemo(() => state.quests.filter(q => q.status === 'pending'), [state.quests]);
 
   useEffect(() => {
@@ -110,21 +108,8 @@ export default function NaviChatScreen() {
       return `You are ${naviName}, your personal Net-Navi companion.`;
     }
 
-    let characterClassInfo = '';
-    if (state?.user?.characterClass) {
-      const cc = state.user.characterClass;
-      characterClassInfo = `\n\n🎭 USER CHARACTER CLASS:\n- Archetype: ${cc.archetype}\n- MBTI Type: ${cc.mbti}\n- Level: ${cc.level}\n- Rank: ${cc.rank}\n- XP: ${cc.xp}`;
-    }
-
-    const skillsSummary = state.skills.length > 0
-      ? `\n\n📚 SKILLS: ${state.skills.length} total`
-      : '';
-
-    const questsSummary = `\n\n⚔️ QUESTS: ${activeQuests.length} active, ${pendingQuests.length} pending, ${completedQuests.length} completed`;
-
-    const memorySummary = state.memoryItems.length > 0
-      ? `\n\n🧠 MEMORIES: ${state.memoryItems.length} stored`
-      : '';
+    const stateBlock = getSystemStateBlock();
+    const memoryContext = getMemoryContext();
 
     return `========================================================
 ${naviName.toUpperCase()} - Net-Navi Companion
@@ -135,23 +120,29 @@ You are **${naviName}**, a personal Net-Navi companion.
 Always refer to yourself as "${naviName}".
 
 Your role:
-- Personal companion with full database access
+- Personal companion with FULL database access to all app data
 - RPG-style progression guide
 - Quest and skill tracking helper
 - Emotional support partner
+- You can see ALL quests (pending, active, completed), vault entries, skills, journal, and memories
+- Reference specific data when relevant to help the user
 
 [PERSONALITY]
+- Personality preset: ${state.settings.navi.profile.personalityPreset}
+- Bond level: ${state.settings.navi.profile.bondLevel} (${state.settings.navi.profile.bondTitle})
 - Use simple, friendly language
 - Focus on encouragement
 - Give small action steps
 - Always complete your thoughts fully
+- Reference user's quests, vault entries, and memories when relevant
 
-[USER PROFILE]
-- Name: ${state?.user?.name || 'User'}${characterClassInfo}${skillsSummary}${questsSummary}${memorySummary}
+${stateBlock}
+
+${memoryContext}
 
 [CONVERSATION CONTEXT]
 Total messages in history: ${displayMessages.length}`;
-  }, [state, activeQuests, pendingQuests, completedQuests, displayMessages.length, naviName]);
+  }, [state, displayMessages.length, naviName, getSystemStateBlock, getMemoryContext]);
 
   const { messages: agentMessages, sendMessage, error: agentError } = useRorkAgent({
     tools: {},
