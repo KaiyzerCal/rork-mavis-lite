@@ -126,7 +126,6 @@ export const [NaviAPIProvider, useNaviAPI] = createContextHook((): NaviDatabaseA
   const conversationSaveMutation = trpc.conversations.save.useMutation();
   const memorySaveMutation = trpc.memory.save.useMutation();
   const naviProfileUpdateMutation = trpc.navi.updateProfile.useMutation();
-  const appStateSyncMutation = trpc.appstate.sync.useMutation();
   
   const userId = state.user.id;
   
@@ -453,24 +452,10 @@ export const [NaviAPIProvider, useNaviAPI] = createContextHook((): NaviDatabaseA
   
   const syncAPI = {
     omnisync: async () => {
-      console.log('[NaviAPI] Starting omnisync to backend...');
-      
-      try {
-        await appStateSyncMutation.mutateAsync({
-          userId,
-          quests: state.quests,
-          skills: state.skills,
-          vault: state.vault,
-          dailyCheckIns: state.dailyCheckIns,
-        });
-        
-        console.log('[NaviAPI] Omnisync completed successfully');
-        
-        return omnisync();
-      } catch {
-        console.log('[NaviAPI] Backend sync skipped, performing local sync');
-        return omnisync();
-      }
+      console.log('[NaviAPI] Starting omnisync...');
+      const result = await omnisync();
+      console.log('[NaviAPI] Omnisync completed:', result.success ? 'success' : 'failed');
+      return result;
     },
     getFullState: async () => {
       return state;
