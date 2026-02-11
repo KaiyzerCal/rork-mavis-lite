@@ -1,5 +1,5 @@
 import { useRorkAgent } from '@rork-ai/toolkit-sdk';
-import { Sparkle, Send, CheckCircle, XCircle, Target, Zap, Plus, Mic, MicOff, Volume2, VolumeX, Copy } from 'lucide-react-native';
+import { Sparkle, Send, CheckCircle, XCircle, Target, Zap, Plus, Mic, MicOff, Volume2, VolumeX, Copy, Square, ClipboardPaste } from 'lucide-react-native';
 import { Audio } from 'expo-av';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -60,6 +60,7 @@ export default function NaviChatScreen() {
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
   
   const { state, isLoaded, acceptQuest, declineQuest, saveChatMessage, getChatHistory, addQuest, extractAndStoreMemoriesFromMessage, getSystemStateBlock, getMemoryContext } = useApp();
+  const abortRef = useRef<boolean>(false);
   const naviAPI = useNaviAPI();
 
   const naviName = state.settings.navi.profile.name || 'Navi.EXE';
@@ -191,6 +192,10 @@ Total messages in history: ${displayMessages.length}`;
     
     if (!fullText || fullText.length === 0) return;
     
+    if (abortRef.current) {
+      return;
+    }
+    
     const checkComplete = setTimeout(() => {
       const currentParts = lastAgentMsg.parts?.filter(p => p.type === 'text' && 'text' in p) || [];
       const currentText = currentParts.map(p => (p as any).text).join('').trim();
@@ -228,6 +233,48 @@ Total messages in history: ${displayMessages.length}`;
     return () => clearTimeout(checkComplete);
   }, [agentMessages, addMessageToDisplay, saveMessage]);
 
+  const handleStop = useCallback(() => {
+    console.log('[NaviChat] ⏹️ STOP requested by user');
+    abortRef.current = true;
+    
+    if (agentMessages.length > 0) {
+      const lastAgentMsg = agentMessages[agentMessages.length - 1];
+      if (lastAgentMsg.role === 'assistant' && !processedAgentIdsRef.current.has(lastAgentMsg.id)) {
+        const textParts = lastAgentMsg.parts?.filter(p => p.type === 'text' && 'text' in p) || [];
+        const partialText = textParts.map(p => (p as any).text).join('').trim();
+        
+        if (partialText.length > 0) {
+          processedAgentIdsRef.current.add(lastAgentMsg.id);
+          
+          const assistantId = pendingAssistantIdRef.current || `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+          pendingAssistantIdRef.current = null;
+          
+          const assistantMsg: StoredMessage = {
+            id: assistantId,
+            role: 'assistant',
+            content: partialText + '\n\n_(stopped)_',
+            timestamp: new Date().toISOString(),
+          };
+          
+          addMessageToDisplay(assistantMsg);
+          saveMessage(assistantMsg);
+          console.log('[NaviChat] ⏹️ Partial response saved:', partialText.length, 'chars');
+        }
+      }
+    }
+    
+    setIsSending(false);
+    setTimeout(() => { abortRef.current = false; }, 100);
+  }, [agentMessages, addMessageToDisplay, saveMessage]);
+
+  const handlePasteToInput = useCallback(async () => {
+    const { pasteFromClipboard } = await import('@/lib/clipboard');
+    const text = await pasteFromClipboard();
+    if (text) {
+      setInput(prev => prev ? `${prev} ${text}` : text);
+    }
+  }, []);
+
   const handleSend = useCallback(async () => {
     const trimmedInput = input.trim();
     if (!trimmedInput || isSending) return;
@@ -235,6 +282,7 @@ Total messages in history: ${displayMessages.length}`;
     console.log('[NaviChat] === SENDING MESSAGE ===');
     setInput('');
     setIsSending(true);
+    abortRef.current = false;
     
     const userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
     const userMsg: StoredMessage = {
@@ -860,16 +908,29 @@ Total messages in history: ${displayMessages.length}`;
               editable={!isRecording && !isTranscribing}
             />
             <TouchableOpacity
-              style={[styles.sendButton, (!input.trim() || isSending) && styles.sendButtonDisabled]}
-              onPress={handleSend}
-              disabled={!input.trim() || isSending}
+              style={styles.pasteButton}
+              onPress={handlePasteToInput}
+              activeOpacity={0.7}
             >
-              {isSending ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Send size={20} color={input.trim() ? '#ffffff' : '#94a3b8'} fill={input.trim() ? '#ffffff' : 'transparent'} />
-              )}
+              <ClipboardPaste size={18} color="#94a3b8" />
             </TouchableOpacity>
+            {isSending ? (
+              <TouchableOpacity
+                style={styles.stopButton}
+                onPress={handleStop}
+                activeOpacity={0.7}
+              >
+                <Square size={18} color="#ffffff" fill="#ffffff" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
+                onPress={handleSend}
+                disabled={!input.trim()}
+              >
+                <Send size={20} color={input.trim() ? '#ffffff' : '#94a3b8'} fill={input.trim() ? '#ffffff' : 'transparent'} />
+              </TouchableOpacity>
+            )}
           </View>
           {isRecording && (
             <View style={styles.recordingIndicator}>

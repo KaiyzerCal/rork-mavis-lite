@@ -24,6 +24,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [ltmBlocks, setLtmBlocks] = useState<CompressedMemoryBlock[]>([]);
   const ltmLoadedRef = useRef<boolean>(false);
+  const lastAutoCompressCountRef = useRef<number>(0);
+  const AUTO_COMPRESS_INTERVAL = 10;
 
   useEffect(() => {
     loadState();
@@ -57,6 +59,44 @@ export const [AppProvider, useApp] = createContextHook(() => {
       saveState();
     }
   }, [state, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded || !ltmLoadedRef.current) return;
+    const chatHistory = safeArray<ChatThread>(state.chatHistory, []);
+    const totalMessages = chatHistory.reduce((acc, t) => acc + t.messages.length, 0);
+    
+    if (totalMessages > 0 && totalMessages >= lastAutoCompressCountRef.current + AUTO_COMPRESS_INTERVAL) {
+      lastAutoCompressCountRef.current = totalMessages;
+      console.log('[AutoLTM] Chat milestone reached (' + totalMessages + ' messages), auto-compressing memories...');
+      
+      const doAutoCompress = async () => {
+        try {
+          const compressedBlocks = compressMemories(
+            safeArray<MemoryItem>(state.memoryItems, []),
+            safeArray<RelationshipMemory>(state.relationshipMemories, []),
+            safeArray<SessionSummary>(state.sessionSummaries, []),
+            ltmBlocks
+          );
+          
+          const ltmStore: LongTermMemoryStore = {
+            version: 2,
+            lastCompressed: new Date().toISOString(),
+            blocks: compressedBlocks,
+            rawMemoryCount: (state.memoryItems?.length || 0) + (state.relationshipMemories?.length || 0),
+            compressionRuns: (ltmBlocks.length > 0 ? 1 : 0) + 1,
+          };
+          
+          await saveLongTermMemory(ltmStore);
+          setLtmBlocks(compressedBlocks);
+          console.log('[AutoLTM] Auto-compressed:', compressedBlocks.length, 'blocks,', compressedBlocks.reduce((s, b) => s + b.details.length, 0), 'details');
+        } catch (error) {
+          console.error('[AutoLTM] Auto-compression failed:', error);
+        }
+      };
+      
+      doAutoCompress();
+    }
+  }, [state.chatHistory, state.memoryItems, state.relationshipMemories, state.sessionSummaries, isLoaded, ltmBlocks]);
 
   const loadState = async () => {
     try {

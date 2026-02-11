@@ -34,11 +34,13 @@ import {
   File,
   Camera,
   ImagePlus,
+  Copy,
 } from 'lucide-react-native';
 
 import { useApp } from '@/contexts/AppContext';
 import type { VaultEntry, AppFile, GeneratedImage, FileType } from '@/types';
 import CopyButton from '@/components/CopyButton';
+import { copyToClipboard } from '@/lib/clipboard';
 
 const ENTRY_TYPES = [
   { id: 'note' as const, label: 'Note', icon: FileText, color: '#3b82f6', bgColor: '#eff6ff' },
@@ -513,7 +515,19 @@ export default function VaultScreen() {
                     <ChevronRight size={18} color="#cbd5e1" />
                   </View>
                   
-                  <Text style={styles.entryTitle} numberOfLines={2}>{entry.title}</Text>
+                  <View style={styles.entryTitleRow}>
+                    <Text style={styles.entryTitle} numberOfLines={2}>{entry.title}</Text>
+                    <TouchableOpacity
+                      style={styles.entryCopyButton}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        copyToClipboard(`${entry.title}\n\n${entry.content}${entry.tags.length > 0 ? '\n\nTags: ' + entry.tags.join(', ') : ''}`);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Copy size={14} color="#94a3b8" />
+                    </TouchableOpacity>
+                  </View>
                   <Text style={styles.entryPreview} numberOfLines={3}>{entry.content}</Text>
                   
                   {entry.tags.length > 0 && (
@@ -1098,12 +1112,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94a3b8',
   },
+  entryTitleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   entryTitle: {
     fontSize: 17,
     fontWeight: '600' as const,
     color: '#0f172a',
     marginBottom: 6,
     lineHeight: 22,
+    flex: 1,
+  },
+  entryCopyButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+    marginTop: 2,
   },
   entryPreview: {
     fontSize: 14,

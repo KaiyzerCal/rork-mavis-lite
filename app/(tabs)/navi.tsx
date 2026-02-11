@@ -14,6 +14,7 @@ import { MessageCircle, ChevronRight, Heart, Shield, Lock, Database, MessageSqua
 import { router } from 'expo-router';
 
 import { useApp } from '@/contexts/AppContext';
+import { useBackendSync } from '@/contexts/BackendSyncContext';
 import type { RelationshipMemory } from '@/types';
 import NaviAvatar from '@/components/NaviAvatar';
 import { 
@@ -29,6 +30,7 @@ import {
 export default function NaviScreen() {
   const insets = useSafeAreaInsets();
   const { state, omnisync, getChatHistory, ltmBlocks } = useApp();
+  const { forceSync } = useBackendSync();
   const naviProfile = state.settings.navi.profile;
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [showMemoryForm, setShowMemoryForm] = useState<boolean>(false);
@@ -55,6 +57,13 @@ export default function NaviScreen() {
     try {
       const result = await omnisync();
       if (result.success) {
+        console.log('[NaviScreen] Omnisync complete, triggering backend force sync...');
+        try {
+          await forceSync();
+          console.log('[NaviScreen] Backend force sync triggered after omnisync');
+        } catch (syncError) {
+          console.warn('[NaviScreen] Backend sync after omnisync failed (data saved locally):', syncError);
+        }
         Alert.alert(
           'Omnisync Complete',
           `${result.message}\n\nSnapshot:\n` +

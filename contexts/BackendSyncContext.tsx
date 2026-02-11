@@ -405,6 +405,8 @@ export const [BackendSyncProvider, useBackendSync] = createContextHook(() => {
   const userName = state.user.name;
   const hasAssessment = state.user.hasCompletedAssessment;
   const leaderboardXP = state.leaderboard.find(l => l.id === 'me')?.xp || 0;
+  const ltmBlocksLength = ltmBlocks.length;
+  const ltmDetailCount = ltmBlocks.reduce((s, b) => s + b.details.length, 0);
   
   useEffect(() => {
     if (isLoaded && hasInitialSyncRef.current) {
@@ -430,6 +432,8 @@ export const [BackendSyncProvider, useBackendSync] = createContextHook(() => {
     userName,
     hasAssessment,
     leaderboardXP,
+    ltmBlocksLength,
+    ltmDetailCount,
   ]);
 
   const resetBackendStatus = useCallback(() => {
