@@ -236,7 +236,7 @@ export default function NaviScreen() {
         <Animated.View style={{ opacity: chatBtnAnim, transform: [{ scale: chatBtnAnim }] }}>
           <TouchableOpacity
             style={styles.chatButton}
-            onPress={() => router.push('/mavis')}
+            onPress={() => router.push('/(tabs)/mavis' as any)}
             activeOpacity={0.85}
             testID="talk-to-navi"
           >
@@ -415,7 +415,7 @@ export default function NaviScreen() {
                'Metaverse-OS'}
             </Text>
           </View>
-          <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/settings')} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/(tabs)/settings' as any)} activeOpacity={0.7}>
             <Text style={styles.settingsBtnText}>Customize in Settings</Text>
             <ChevronRight size={16} color="#818cf8" />
           </TouchableOpacity>

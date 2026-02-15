@@ -341,7 +341,7 @@ export default function Character() {
               <Text style={styles.cardTitle}>Class Quests</Text>
               <TouchableOpacity
                 style={styles.viewAllButton}
-                onPress={() => router.push('/quests')}
+                onPress={() => router.push('/(tabs)/quests' as any)}
               >
                 <Text style={styles.viewAllText}>View All</Text>
               </TouchableOpacity>

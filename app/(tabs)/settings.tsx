@@ -154,7 +154,7 @@ export default function Settings() {
                       style: 'destructive',
                       onPress: () => {
                         resetCharacterClass();
-                        router.push('/dashboard');
+                        router.push('/(tabs)/dashboard' as any);
                       },
                     },
                   ]

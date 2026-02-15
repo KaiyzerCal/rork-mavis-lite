@@ -168,7 +168,7 @@ export default function Dashboard() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>✅ Recently Completed</Text>
-                <TouchableOpacity onPress={() => router.push('/quests')}>
+                <TouchableOpacity onPress={() => router.push('/(tabs)/quests' as any)}>
                   <Text style={styles.sectionLink}>View All</Text>
                 </TouchableOpacity>
               </View>

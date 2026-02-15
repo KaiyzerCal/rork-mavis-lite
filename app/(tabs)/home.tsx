@@ -63,7 +63,7 @@ export default function Home() {
 
           <TouchableOpacity
             style={styles.naviCard}
-            onPress={() => router.push('/mavis')}
+            onPress={() => router.push('/(tabs)/mavis' as any)}
             activeOpacity={0.8}
           >
             <NaviAvatar
@@ -93,7 +93,7 @@ export default function Home() {
             <View style={styles.actionsGrid}>
               <TouchableOpacity
                 style={styles.actionCard}
-                onPress={() => router.push('/mavis')}
+                onPress={() => router.push('/(tabs)/mavis' as any)}
                 activeOpacity={0.7}
               >
                 <MessageCircle size={32} color="#6366f1" />
@@ -101,7 +101,7 @@ export default function Home() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionCard}
-                onPress={() => router.push('/quests')}
+                onPress={() => router.push('/(tabs)/quests' as any)}
                 activeOpacity={0.7}
               >
                 <Target size={32} color="#10b981" />
@@ -109,7 +109,7 @@ export default function Home() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionCard}
-                onPress={() => router.push('/character')}
+                onPress={() => router.push('/(tabs)/character' as any)}
                 activeOpacity={0.7}
               >
                 <TrendingUp size={32} color="#f59e0b" />
@@ -117,7 +117,7 @@ export default function Home() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionCard}
-                onPress={() => router.push('/vault')}
+                onPress={() => router.push('/(tabs)/vault' as any)}
                 activeOpacity={0.7}
               >
                 <Sparkle size={32} color="#8b5cf6" />
