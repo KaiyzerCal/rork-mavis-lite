@@ -80,6 +80,12 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="files"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="journal"
         options={{
           href: null,
