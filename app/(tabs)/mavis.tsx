@@ -904,7 +904,7 @@ Total messages in history: ${displayMessages.length}`;
               onChangeText={setInput}
               onSubmitEditing={handleSend}
               multiline
-              maxLength={2000}
+              maxLength={10000}
               editable={!isRecording && !isTranscribing}
             />
             <TouchableOpacity
@@ -1330,7 +1330,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#0f172a',
     minHeight: 40,
-    maxHeight: 120,
+    maxHeight: 200,
     paddingTop: Platform.OS === 'ios' ? 8 : 0,
     paddingBottom: Platform.OS === 'ios' ? 8 : 0,
   },

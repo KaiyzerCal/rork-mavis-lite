@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import Svg, { Path, Circle, Ellipse, Defs, LinearGradient, Stop, G, Rect, Polygon, Line } from 'react-native-svg';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Platform, Animated, Easing } from 'react-native';
+import Svg, { Path, Circle, Ellipse, Defs, LinearGradient, Stop, G, Rect, Polygon, Line, RadialGradient } from 'react-native-svg';
 
 export type NaviAvatarStyle = 
   | 'classic' 
@@ -62,12 +62,153 @@ export default function NaviAvatar({
   style = 'classic',
   glowEnabled = true,
 }: NaviAvatarProps) {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0.12)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const orbAnim1 = useRef(new Animated.Value(0)).current;
+  const orbAnim2 = useRef(new Animated.Value(0)).current;
+  const orbAnim3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const breathe = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.04,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    const glow = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 0.28,
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0.12,
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    const float = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -4,
+          duration: 2800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 4,
+          duration: 2800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    const orbit1 = Animated.loop(
+      Animated.timing(orbAnim1, {
+        toValue: 1,
+        duration: 6000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+
+    const orbit2 = Animated.loop(
+      Animated.timing(orbAnim2, {
+        toValue: 1,
+        duration: 8000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+
+    const orbit3 = Animated.loop(
+      Animated.timing(orbAnim3, {
+        toValue: 1,
+        duration: 10000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+
+    breathe.start();
+    glow.start();
+    float.start();
+    orbit1.start();
+    orbit2.start();
+    orbit3.start();
+
+    return () => {
+      breathe.stop();
+      glow.stop();
+      float.stop();
+      orbit1.stop();
+      orbit2.stop();
+      orbit3.stop();
+    };
+  }, []);
+
+  const orb1TranslateX = orbAnim1.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0, size * 0.55, 0, -size * 0.55, 0],
+  });
+  const orb1TranslateY = orbAnim1.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [-size * 0.55, 0, size * 0.55, 0, -size * 0.55],
+  });
+  const orb2TranslateX = orbAnim2.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [size * 0.45, 0, -size * 0.45, 0, size * 0.45],
+  });
+  const orb2TranslateY = orbAnim2.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0, -size * 0.45, 0, size * 0.45, 0],
+  });
+  const orb3TranslateX = orbAnim3.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [-size * 0.35, size * 0.35, size * 0.35, -size * 0.35, -size * 0.35],
+  });
+  const orb3TranslateY = orbAnim3.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [-size * 0.35, -size * 0.35, size * 0.35, size * 0.35, -size * 0.35],
+  });
+
+  const orb1Opacity = orbAnim1.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0.6, 1, 0.6, 1, 0.6],
+  });
+  const orb2Opacity = orbAnim2.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [1, 0.5, 1, 0.5, 1],
+  });
+  const orb3Opacity = orbAnim3.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.4, 0.9, 0.4],
+  });
+
   const renderNaviBody = () => {
     switch (style) {
       case 'warrior_male':
         return (
           <G>
-            {/* Muscular male humanoid warrior */}
             <Rect x="38" y="10" width="24" height="8" rx="2" fill={secondaryColor} />
             <Path d="M35 18 Q50 12 65 18 L62 22 L38 22 Z" fill={secondaryColor} />
             <Ellipse cx="50" cy="32" rx="16" ry="18" fill={primaryColor} />
@@ -92,7 +233,6 @@ export default function NaviAvatar({
       case 'warrior_female':
         return (
           <G>
-            {/* Feminine humanoid warrior with flowing hair */}
             <Path d="M30 25 Q35 8 50 8 Q65 8 70 25 L72 45 Q70 50 65 48 L62 30 L38 30 L35 48 Q30 50 28 45 Z" fill={secondaryColor} />
             <Path d="M28 40 Q25 55 30 70" stroke={secondaryColor} strokeWidth="3" fill="none" />
             <Path d="M72 40 Q75 55 70 70" stroke={secondaryColor} strokeWidth="3" fill="none" />
@@ -117,7 +257,6 @@ export default function NaviAvatar({
       case 'mecha_unit':
         return (
           <G>
-            {/* Mechanical robot with angular design */}
             <Rect x="35" y="8" width="30" height="6" rx="1" fill={secondaryColor} />
             <Path d="M32 14 L68 14 L72 20 L28 20 Z" fill={primaryColor} />
             <Rect x="30" y="20" width="40" height="35" rx="3" fill={primaryColor} />
@@ -146,7 +285,6 @@ export default function NaviAvatar({
       case 'beast_wolf':
         return (
           <G>
-            {/* Wolf-like beast companion */}
             <Path d="M25 25 L35 10 L40 25 Z" fill={primaryColor} />
             <Path d="M75 25 L65 10 L60 25 Z" fill={primaryColor} />
             <Path d="M28 22 L37 12 L42 22" stroke={secondaryColor} strokeWidth="2" fill="none" />
@@ -172,7 +310,6 @@ export default function NaviAvatar({
       case 'beast_dragon':
         return (
           <G>
-            {/* Dragon-like creature with horns and scales */}
             <Path d="M20 30 L28 8 L35 25 L32 30 Z" fill={secondaryColor} />
             <Path d="M80 30 L72 8 L65 25 L68 30 Z" fill={secondaryColor} />
             <Path d="M28 25 L25 15 L32 22" stroke={primaryColor} strokeWidth="2" fill="none" />
@@ -199,7 +336,6 @@ export default function NaviAvatar({
       case 'demon_lord':
         return (
           <G>
-            {/* Dark demon with horns and menacing features */}
             <Path d="M22 40 L30 5 L38 30 L32 38 Z" fill={secondaryColor} />
             <Path d="M78 40 L70 5 L62 30 L68 38 Z" fill={secondaryColor} />
             <Path d="M28 32 L32 10 L36 28" stroke="#dc2626" strokeWidth="2" fill="none" />
@@ -225,7 +361,6 @@ export default function NaviAvatar({
       case 'angel_seraph':
         return (
           <G>
-            {/* Angelic being with halo and ethereal features */}
             <Circle cx="50" cy="12" r="8" fill="none" stroke={secondaryColor} strokeWidth="3" />
             <Circle cx="50" cy="12" r="5" fill={secondaryColor} opacity={0.3} />
             <Path d="M18 50 Q25 30 35 40 L38 50 Q30 55 22 55 Z" fill={secondaryColor} opacity={0.8} />
@@ -253,7 +388,6 @@ export default function NaviAvatar({
       case 'alien_grey':
         return (
           <G>
-            {/* Classic grey alien with large eyes */}
             <Ellipse cx="50" cy="40" rx="24" ry="30" fill={primaryColor} />
             <Ellipse cx="50" cy="38" rx="20" ry="26" fill={backgroundColor} />
             <Ellipse cx="38" cy="35" rx="10" ry="14" fill="#1f2937" />
@@ -276,7 +410,6 @@ export default function NaviAvatar({
       case 'alien_nova':
         return (
           <G>
-            {/* Cosmic alien with energy patterns */}
             <Circle cx="50" cy="10" r="5" fill={secondaryColor} opacity={0.6} />
             <Path d="M50 15 L50 22" stroke={secondaryColor} strokeWidth="2" />
             <Ellipse cx="50" cy="40" rx="22" ry="24" fill={primaryColor} />
@@ -303,7 +436,6 @@ export default function NaviAvatar({
       case 'slime_cute':
         return (
           <G>
-            {/* Cute slime creature */}
             <Ellipse cx="50" cy="55" rx="35" ry="35" fill={primaryColor} opacity={0.8} />
             <Ellipse cx="50" cy="50" rx="30" ry="30" fill={primaryColor} />
             <Ellipse cx="50" cy="45" rx="25" ry="22" fill={backgroundColor} opacity={0.4} />
@@ -326,7 +458,6 @@ export default function NaviAvatar({
       case 'golem_stone':
         return (
           <G>
-            {/* Stone golem with rocky features */}
             <Polygon points="50,8 65,20 62,35 38,35 35,20" fill={primaryColor} />
             <Polygon points="40,12 50,8 60,12 58,22 42,22" fill={secondaryColor} />
             <Rect x="30" y="30" width="40" height="35" rx="5" fill={primaryColor} />
@@ -352,7 +483,6 @@ export default function NaviAvatar({
       case 'spirit_flame':
         return (
           <G>
-            {/* Fire spirit with flame body */}
             <Path d="M50 5 Q60 15 55 25 Q65 20 60 35 Q70 30 62 45 L50 50 L38 45 Q30 30 40 35 Q35 20 45 25 Q40 15 50 5" fill={secondaryColor} opacity={0.8} />
             <Path d="M50 10 Q58 18 54 28 Q62 24 58 38 L50 45 L42 38 Q38 24 46 28 Q42 18 50 10" fill={primaryColor} />
             <Ellipse cx="50" cy="55" rx="20" ry="18" fill={primaryColor} />
@@ -373,7 +503,6 @@ export default function NaviAvatar({
       case 'spirit_ice':
         return (
           <G>
-            {/* Ice spirit with crystalline features */}
             <Polygon points="50,5 58,15 55,25 60,30 50,35 40,30 45,25 42,15" fill={secondaryColor} opacity={0.6} />
             <Polygon points="50,8 55,16 52,23 56,28 50,32 44,28 48,23 45,16" fill="#ffffff" opacity={0.4} />
             <Polygon points="35,25 42,35 38,45 50,50 62,45 58,35 65,25 50,20" fill={primaryColor} />
@@ -395,7 +524,6 @@ export default function NaviAvatar({
       case 'assassin':
         return (
           <G>
-            {/* Stealthy assassin with hood and mask */}
             <Path d="M30 35 Q50 5 70 35 L68 45 Q50 40 32 45 Z" fill={primaryColor} />
             <Path d="M35 32 Q50 10 65 32 L63 40 Q50 36 37 40 Z" fill={backgroundColor} opacity={0.3} />
             <Ellipse cx="50" cy="42" rx="18" ry="16" fill={primaryColor} />
@@ -419,7 +547,6 @@ export default function NaviAvatar({
       case 'paladin':
         return (
           <G>
-            {/* Holy paladin with armor and cape */}
             <Path d="M25 45 L35 30 L40 45 L35 55 L25 55 Z" fill={secondaryColor} opacity={0.8} />
             <Path d="M75 45 L65 30 L60 45 L65 55 L75 55 Z" fill={secondaryColor} opacity={0.8} />
             <Ellipse cx="50" cy="30" rx="16" ry="18" fill={primaryColor} />
@@ -444,7 +571,6 @@ export default function NaviAvatar({
       case 'animal_dolphin':
         return (
           <G>
-            {/* Friendly dolphin */}
             <Ellipse cx="50" cy="45" rx="28" ry="22" fill={primaryColor} />
             <Path d="M22 45 Q15 35 25 30 Q20 40 25 45" fill={primaryColor} />
             <Path d="M78 45 Q85 40 82 50 L78 48" fill={primaryColor} />
@@ -464,7 +590,6 @@ export default function NaviAvatar({
       case 'animal_seahorse':
         return (
           <G>
-            {/* Elegant seahorse */}
             <Path d="M50 10 Q60 15 55 25 Q50 20 50 10" fill={secondaryColor} />
             <Ellipse cx="50" cy="32" rx="14" ry="16" fill={primaryColor} />
             <Circle cx="50" cy="30" r="11" fill={backgroundColor} />
@@ -485,7 +610,6 @@ export default function NaviAvatar({
       case 'animal_turtle':
         return (
           <G>
-            {/* Wise turtle */}
             <Ellipse cx="50" cy="55" rx="30" ry="25" fill={primaryColor} />
             <Ellipse cx="50" cy="52" rx="26" ry="20" fill={secondaryColor} />
             <Path d="M30 45 L40 35 L50 45 L60 35 L70 45 L65 55 L50 60 L35 55 Z" fill={primaryColor} opacity={0.8} />
@@ -508,7 +632,6 @@ export default function NaviAvatar({
       case 'animal_fox':
         return (
           <G>
-            {/* Clever fox */}
             <Path d="M25 35 L35 8 L42 30" fill={primaryColor} />
             <Path d="M75 35 L65 8 L58 30" fill={primaryColor} />
             <Path d="M28 30 L36 12 L40 28" fill={secondaryColor} opacity={0.6} />
@@ -532,7 +655,6 @@ export default function NaviAvatar({
       case 'animal_lion':
         return (
           <G>
-            {/* Majestic lion */}
             <Circle cx="50" cy="45" r="35" fill={secondaryColor} />
             <Circle cx="50" cy="45" r="28" fill={primaryColor} />
             <Ellipse cx="50" cy="48" rx="20" ry="18" fill={primaryColor} />
@@ -556,7 +678,6 @@ export default function NaviAvatar({
       case 'animal_tiger':
         return (
           <G>
-            {/* Fierce tiger */}
             <Path d="M28 30 L35 10 L42 28" fill={primaryColor} />
             <Path d="M72 30 L65 10 L58 28" fill={primaryColor} />
             <Ellipse cx="50" cy="42" rx="24" ry="22" fill={primaryColor} />
@@ -583,7 +704,6 @@ export default function NaviAvatar({
       case 'animal_bear':
         return (
           <G>
-            {/* Friendly bear */}
             <Circle cx="30" cy="22" r="12" fill={primaryColor} />
             <Circle cx="70" cy="22" r="12" fill={primaryColor} />
             <Circle cx="30" cy="22" r="7" fill={secondaryColor} />
@@ -607,7 +727,6 @@ export default function NaviAvatar({
       case 'animal_butterfly':
         return (
           <G>
-            {/* Graceful butterfly */}
             <Path d="M20 35 Q10 25 15 15 Q25 20 30 35 Q25 45 20 35" fill={primaryColor} />
             <Path d="M80 35 Q90 25 85 15 Q75 20 70 35 Q75 45 80 35" fill={primaryColor} />
             <Path d="M25 32 Q18 25 22 18 Q28 22 32 32" fill={secondaryColor} opacity={0.6} />
@@ -632,7 +751,6 @@ export default function NaviAvatar({
       case 'animal_dragonfly':
         return (
           <G>
-            {/* Elegant dragonfly */}
             <Ellipse cx="50" cy="25" rx="14" ry="12" fill={primaryColor} />
             <Circle cx="50" cy="24" r="10" fill={backgroundColor} />
             <Circle cx="45" cy="22" r="5" fill={primaryColor} />
@@ -659,7 +777,6 @@ export default function NaviAvatar({
       case 'animal_bull':
         return (
           <G>
-            {/* Powerful bull */}
             <Path d="M15 35 Q10 25 20 20 L30 30" fill={primaryColor} />
             <Path d="M85 35 Q90 25 80 20 L70 30" fill={primaryColor} />
             <Path d="M18 32 Q15 26 22 23" stroke={secondaryColor} strokeWidth="3" fill="none" />
@@ -684,7 +801,6 @@ export default function NaviAvatar({
       case 'animal_shark':
         return (
           <G>
-            {/* Fierce shark */}
             <Path d="M50 15 Q58 8 55 20 L50 25" fill={secondaryColor} />
             <Ellipse cx="50" cy="45" rx="32" ry="22" fill={primaryColor} />
             <Path d="M18 45 Q10 40 15 50 L22 48" fill={primaryColor} />
@@ -704,7 +820,6 @@ export default function NaviAvatar({
       case 'animal_tarantula':
         return (
           <G>
-            {/* Mysterious tarantula */}
             <Ellipse cx="50" cy="55" rx="22" ry="18" fill={primaryColor} />
             <Ellipse cx="50" cy="30" rx="14" ry="12" fill={primaryColor} />
             <Circle cx="44" cy="28" r="4" fill="#1f2937" />
@@ -730,7 +845,6 @@ export default function NaviAvatar({
       case 'animal_phoenix':
         return (
           <G>
-            {/* Majestic phoenix */}
             <Path d="M50 5 Q55 -5 60 10 Q55 15 50 12 Q45 15 40 10 Q45 -5 50 5" fill={secondaryColor} />
             <Path d="M40 12 Q35 5 45 10" fill={primaryColor} />
             <Path d="M60 12 Q65 5 55 10" fill={primaryColor} />
@@ -758,7 +872,6 @@ export default function NaviAvatar({
       case 'animal_snake':
         return (
           <G>
-            {/* Wise snake */}
             <Ellipse cx="50" cy="30" rx="16" ry="14" fill={primaryColor} />
             <Circle cx="50" cy="28" r="11" fill={backgroundColor} />
             <Ellipse cx="44" cy="26" rx="4" ry="5" fill={primaryColor} />
@@ -991,74 +1104,172 @@ export default function NaviAvatar({
     }
   };
 
+  const orbSize = Math.max(4, size * 0.04);
+
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <View style={[localStyles.outerContainer, { width: size * 1.4, height: size * 1.4 }]}>
       {glowEnabled && (
-        <View 
+        <>
+          <Animated.View
+            style={[
+              localStyles.orbParticle,
+              {
+                width: orbSize,
+                height: orbSize,
+                borderRadius: orbSize / 2,
+                backgroundColor: secondaryColor,
+                opacity: orb1Opacity,
+                transform: [{ translateX: orb1TranslateX }, { translateY: orb1TranslateY }],
+              },
+            ]}
+          />
+          <Animated.View
+            style={[
+              localStyles.orbParticle,
+              {
+                width: orbSize * 0.7,
+                height: orbSize * 0.7,
+                borderRadius: (orbSize * 0.7) / 2,
+                backgroundColor: primaryColor,
+                opacity: orb2Opacity,
+                transform: [{ translateX: orb2TranslateX }, { translateY: orb2TranslateY }],
+              },
+            ]}
+          />
+          <Animated.View
+            style={[
+              localStyles.orbParticle,
+              {
+                width: orbSize * 0.5,
+                height: orbSize * 0.5,
+                borderRadius: (orbSize * 0.5) / 2,
+                backgroundColor: secondaryColor,
+                opacity: orb3Opacity,
+                transform: [{ translateX: orb3TranslateX }, { translateY: orb3TranslateY }],
+              },
+            ]}
+          />
+        </>
+      )}
+
+      {glowEnabled && (
+        <Animated.View
           style={[
-            styles.glow, 
-            { 
-              width: size * 1.2, 
-              height: size * 1.2,
-              backgroundColor: primaryColor,
-              borderRadius: size * 0.6,
-            }
-          ]} 
+            localStyles.glowRing,
+            {
+              width: size * 1.25,
+              height: size * 1.25,
+              borderRadius: size * 0.625,
+              borderColor: primaryColor,
+              opacity: glowAnim,
+            },
+          ]}
         />
       )}
-      <View style={[styles.avatarContainer, { width: size, height: size, borderRadius: size * 0.15 }]}>
-        <Svg width={size} height={size} viewBox="0 0 100 100">
-          <Defs>
-            <LinearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <Stop offset="0%" stopColor={backgroundColor} stopOpacity={1} />
-              <Stop offset="100%" stopColor={primaryColor} stopOpacity={0.3} />
-            </LinearGradient>
-            <LinearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <Stop offset="0%" stopColor={primaryColor} stopOpacity={1} />
-              <Stop offset="100%" stopColor={secondaryColor} stopOpacity={0.8} />
-            </LinearGradient>
-          </Defs>
-          <Rect x="0" y="0" width="100" height="100" rx="15" fill="url(#bgGradient)" />
-          {renderNaviBody()}
-          <Rect x="0" y="0" width="100" height="100" rx="15" fill="none" stroke={secondaryColor} strokeWidth="2" opacity={0.5} />
-        </Svg>
-      </View>
+
+      {glowEnabled && (
+        <Animated.View
+          style={[
+            localStyles.glow,
+            {
+              width: size * 1.15,
+              height: size * 1.15,
+              backgroundColor: primaryColor,
+              borderRadius: size * 0.575,
+              opacity: glowAnim,
+            },
+          ]}
+        />
+      )}
+
+      <Animated.View
+        style={[
+          localStyles.avatarWrapper,
+          {
+            transform: [
+              { scale: pulseAnim },
+              { translateY: floatAnim },
+            ],
+          },
+        ]}
+      >
+        <View style={[localStyles.avatarContainer, { width: size, height: size, borderRadius: size * 0.15 }]}>
+          <Svg width={size} height={size} viewBox="0 0 100 100">
+            <Defs>
+              <LinearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <Stop offset="0%" stopColor={backgroundColor} stopOpacity={1} />
+                <Stop offset="100%" stopColor={primaryColor} stopOpacity={0.3} />
+              </LinearGradient>
+              <LinearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <Stop offset="0%" stopColor={primaryColor} stopOpacity={1} />
+                <Stop offset="100%" stopColor={secondaryColor} stopOpacity={0.8} />
+              </LinearGradient>
+              <RadialGradient id="innerGlow" cx="50%" cy="40%" r="50%">
+                <Stop offset="0%" stopColor={secondaryColor} stopOpacity={0.15} />
+                <Stop offset="100%" stopColor={secondaryColor} stopOpacity={0} />
+              </RadialGradient>
+            </Defs>
+            <Rect x="0" y="0" width="100" height="100" rx="15" fill="url(#bgGradient)" />
+            <Rect x="0" y="0" width="100" height="100" rx="15" fill="url(#innerGlow)" />
+            {renderNaviBody()}
+            <Rect x="0" y="0" width="100" height="100" rx="15" fill="none" stroke={secondaryColor} strokeWidth="2" opacity={0.5} />
+          </Svg>
+        </View>
+      </Animated.View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const localStyles = StyleSheet.create({
+  outerContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
+  glowRing: {
+    position: 'absolute',
+    borderWidth: 2,
+  },
   glow: {
     position: 'absolute',
-    opacity: 0.15,
     ...Platform.select({
       ios: {
         shadowColor: '#6366f1',
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
-        shadowRadius: 20,
+        shadowOpacity: 0.6,
+        shadowRadius: 24,
       },
       android: {
-        elevation: 10,
+        elevation: 12,
       },
     }),
+  },
+  avatarWrapper: {
+    zIndex: 2,
   },
   avatarContainer: {
     overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 8,
+        elevation: 10,
+      },
+    }),
+  },
+  orbParticle: {
+    position: 'absolute',
+    zIndex: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#6366f1',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 6,
       },
     }),
   },
