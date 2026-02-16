@@ -19,6 +19,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useBackendSync } from '@/contexts/BackendSyncContext';
 import type { RelationshipMemory } from '@/types';
 import NaviAvatar from '@/components/NaviAvatar';
+import { useTheme } from '@/hooks/useTheme';
 import { 
   getNaviXPProgress, 
   getNaviRank, 
@@ -72,6 +73,7 @@ export default function NaviScreen() {
   const insets = useSafeAreaInsets();
   const { state, omnisync, getChatHistory, ltmBlocks } = useApp();
   const { forceSync } = useBackendSync();
+  const { colors } = useTheme();
   const naviProfile = state.settings.navi.profile;
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [showMemoryForm, setShowMemoryForm] = useState<boolean>(false);
@@ -196,7 +198,7 @@ export default function NaviScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.heroSection, { opacity: heroFadeAnim, transform: [{ translateY: heroFadeAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>
           <View style={styles.heroHeader}>
@@ -587,7 +589,7 @@ export default function NaviScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0c0f1a',
+    backgroundColor: '#060918',
   },
   scrollView: {
     flex: 1,

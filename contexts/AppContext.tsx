@@ -1,4 +1,4 @@
-import { SQLiteStorage } from '@/lib/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -51,7 +51,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     if (isLoaded) {
       const saveState = async () => {
         try {
-          await SQLiteStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } catch (error) {
           console.error('Failed to save state:', error);
         }
@@ -100,8 +100,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const loadState = async () => {
     try {
-      console.log('[AppContext] 💾 Loading state from SQLite...');
-      const stored = await SQLiteStorage.getItem(STORAGE_KEY);
+      console.log('[AppContext] 💾 Loading state from AsyncStorage...');
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         console.log('[AppContext] 💾 Parsed state, checking chatHistory...');
@@ -860,6 +860,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }));
   }, []);
 
+  const updateTheme = useCallback((theme: 'clean-light' | 'clean-dark') => {
+    setState((prev) => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
+        theme,
+      },
+    }));
+  }, []);
+
   const incrementNaviInteraction = useCallback(() => {
     setState((prev) => {
       const currentProfile = prev.settings.navi.profile;
@@ -1048,7 +1058,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       console.log('[RelMemory] 💾 Storing new relationship memory:', category, '-', detail.substring(0, 50));
       return {
         ...prev,
-        relationshipMemories: [newMemory, ...existingMemories].slice(0, 100),
+        relationshipMemories: [newMemory, ...existingMemories],
       };
     });
   }, []);
@@ -1349,19 +1359,19 @@ export const [AppProvider, useApp] = createContextHook(() => {
       
       console.log('[OMNISYNC] Creating state snapshot:', snapshot);
       
-      await SQLiteStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
-      console.log('[OMNISYNC] State saved to SQLite');
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
+      console.log('[OMNISYNC] State saved to AsyncStorage');
       
       const rollbackKey = `${STORAGE_KEY}_backup_${Date.now()}`;
-      await SQLiteStorage.setItem(rollbackKey, JSON.stringify(updatedState));
+      await AsyncStorage.setItem(rollbackKey, JSON.stringify(updatedState));
       console.log('[OMNISYNC] Rollback snapshot created:', rollbackKey);
       
-      const allKeys = await SQLiteStorage.getAllKeys();
+      const allKeys = await AsyncStorage.getAllKeys();
       const backupKeys = allKeys.filter(key => key.startsWith(`${STORAGE_KEY}_backup_`));
       if (backupKeys.length > 3) {
         const sortedKeys = backupKeys.sort();
         const toDelete = sortedKeys.slice(0, sortedKeys.length - 3);
-        await SQLiteStorage.multiRemove(toDelete);
+        await AsyncStorage.multiRemove([...toDelete]);
         console.log('[OMNISYNC] Cleaned up old backups:', toDelete.length);
       }
       
@@ -1438,6 +1448,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateNaviAvatar,
     updateNaviName,
     resetCharacterClass,
+    updateTheme,
     incrementNaviInteraction,
     addNaviXP,
     addMemoryItem,
@@ -1456,5 +1467,5 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateFile,
     addGeneratedImage,
     deleteGeneratedImage,
-  }), [state, isLoaded, ltmBlocks, getSystemStateBlock, getMemoryContext, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, addRelationshipMemory, extractAndStoreMemoriesFromMessage, omnisync, addFile, deleteFile, updateFile, addGeneratedImage, deleteGeneratedImage]);
+  }), [state, isLoaded, ltmBlocks, getSystemStateBlock, getMemoryContext, addJournalEntry, addSkill, updateSkill, deleteSkill, addSkillXP, addSubSkill, updateSubSkill, deleteSubSkill, addSubSkillXP, calculateLevel, calculateXPForNextLevel, setCharacterClass, updateCharacterClassXP, addQuest, updateQuest, acceptQuest, declineQuest, completeQuest, deleteQuest, toggleQuestMilestone, unlockEvolution, saveChatMessage, getChatHistory, clearChatHistory, addCouncilMember, updateCouncilMember, deleteCouncilMember, addVaultEntry, updateVaultEntry, deleteVaultEntry, addDailyCheckIn, getTodayCheckIn, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, updateNaviName, resetCharacterClass, updateTheme, incrementNaviInteraction, addNaviXP, addMemoryItem, updateMemoryItem, deleteMemoryItem, getRelevantMemories, updateBondMetrics, incrementBondOnMessage, incrementBondOnPositiveEngagement, incrementBondOnEmotionalDisclosure, addRelationshipMemory, extractAndStoreMemoriesFromMessage, omnisync, addFile, deleteFile, updateFile, addGeneratedImage, deleteGeneratedImage]);
 });

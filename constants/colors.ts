@@ -1,12 +1,89 @@
-// template
-const tintColorLight = "#2f95dc";
+export interface ThemeColors {
+  background: string;
+  surface: string;
+  surfaceHighlight: string;
+  border: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  accent: string;
+  accentLight: string;
+  accentBg: string;
+  danger: string;
+  dangerBg: string;
+  inputBg: string;
+  inputBorder: string;
+  modalBg: string;
+  divider: string;
+  tabBar: string;
+  tabBarBorder: string;
+  tabBarActive: string;
+  tabBarInactive: string;
+  shadowColor: string;
+  cardShadowOpacity: number;
+  success: string;
+  successBg: string;
+  warning: string;
+  warningBg: string;
+  warningText: string;
+}
 
-export default {
-  light: {
-    text: "#000",
-    background: "#fff",
-    tint: tintColorLight,
-    tabIconDefault: "#ccc",
-    tabIconSelected: tintColorLight,
-  },
+export const darkTheme: ThemeColors = {
+  background: '#060918',
+  surface: '#141824',
+  surfaceHighlight: '#1e293b',
+  border: '#1e293b',
+  textPrimary: '#f1f5f9',
+  textSecondary: '#94a3b8',
+  textMuted: '#64748b',
+  accent: '#6366f1',
+  accentLight: '#818cf8',
+  accentBg: '#6366f120',
+  danger: '#dc2626',
+  dangerBg: '#dc262620',
+  inputBg: '#0c0f1a',
+  inputBorder: '#1e293b',
+  modalBg: '#141824',
+  divider: '#1e293b',
+  tabBar: '#0c0f1a',
+  tabBarBorder: '#1e293b',
+  tabBarActive: '#818cf8',
+  tabBarInactive: '#64748b',
+  shadowColor: '#000000',
+  cardShadowOpacity: 0.3,
+  success: '#10b981',
+  successBg: '#10b98120',
+  warning: '#f59e0b',
+  warningBg: '#fbbf2420',
+  warningText: '#fbbf24',
+};
+
+export const lightTheme: ThemeColors = {
+  background: '#f8fafc',
+  surface: '#ffffff',
+  surfaceHighlight: '#f1f5f9',
+  border: '#e2e8f0',
+  textPrimary: '#0f172a',
+  textSecondary: '#64748b',
+  textMuted: '#94a3b8',
+  accent: '#6366f1',
+  accentLight: '#818cf8',
+  accentBg: '#eef2ff',
+  danger: '#dc2626',
+  dangerBg: '#fee2e2',
+  inputBg: '#f8fafc',
+  inputBorder: '#e2e8f0',
+  modalBg: '#ffffff',
+  divider: '#e2e8f0',
+  tabBar: '#ffffff',
+  tabBarBorder: '#e2e8f0',
+  tabBarActive: '#6366f1',
+  tabBarInactive: '#94a3b8',
+  shadowColor: '#0f172a',
+  cardShadowOpacity: 0.08,
+  success: '#10b981',
+  successBg: '#ecfdf5',
+  warning: '#f59e0b',
+  warningBg: '#fef3c7',
+  warningText: '#92400e',
 };

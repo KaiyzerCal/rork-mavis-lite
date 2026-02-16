@@ -3,19 +3,22 @@ import { Home, Target, Sparkle, Shield, BookOpen, Settings as SettingsIcon } fro
 import React from "react";
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+
   return (
     <ErrorBoundary>
       <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#6366f1",
-        tabBarInactiveTintColor: "#94a3b8",
+        tabBarActiveTintColor: colors.tabBarActive,
+        tabBarInactiveTintColor: colors.tabBarInactive,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
+          backgroundColor: colors.tabBar,
           borderTopWidth: 1,
-          borderTopColor: "#e2e8f0",
+          borderTopColor: colors.tabBarBorder,
         },
         tabBarLabelStyle: {
           fontSize: 11,

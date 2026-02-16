@@ -19,6 +19,7 @@ import { router } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { useBackendSync } from '@/contexts/BackendSyncContext';
 import NaviAvatar from '@/components/NaviAvatar';
+import { useTheme } from '@/hooks/useTheme';
 
 import type { NaviPersonalityPreset, NaviSkin, NaviMode, NaviAvatarStyle } from '@/types';
 import { NAVI_PERSONALITIES, NAVI_SKINS } from '@/constants/naviPersonalities';
@@ -44,9 +45,10 @@ const SKIN_PRESETS: {
 }));
 
 export default function Settings() {
-  const { state, isLoaded, clearChatHistory, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, deleteMemoryItem, updateNaviName, resetCharacterClass } = useApp();
+  const { state, isLoaded, clearChatHistory, updateNaviProfile, updateNaviPersonality, updateNaviSkin, updateNaviMode, updateNaviAvatar, deleteMemoryItem, updateNaviName, resetCharacterClass, updateTheme } = useApp();
   const { isSyncing, lastSyncTime, syncError, isOnline, forceSync } = useBackendSync();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const naviProfile = state.settings.navi.profile;
 
   const [personalityModalVisible, setPersonalityModalVisible] = useState<boolean>(false);
@@ -109,13 +111,13 @@ export default function Settings() {
   };
 
   return (
-    <View style={styles.backgroundWrapper}>
+    <View style={[styles.backgroundWrapper, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <SettingsIcon size={28} color="#6366f1" />
+          <SettingsIcon size={28} color={colors.accent} />
           <View style={styles.headerText}>
-            <Text style={styles.title}>Settings</Text>
-            <Text style={styles.subtitle}>Manage your profile and app preferences</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Settings</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage your profile and app preferences</Text>
           </View>
         </View>
 
@@ -466,7 +468,36 @@ export default function Settings() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
+            
+            <View style={[styles.settingCard, { backgroundColor: colors.surface }]}>
+              <View style={[styles.settingIconContainer, { backgroundColor: isDark ? '#1e293b' : '#f0f9ff' }]}>
+                <Palette size={24} color={isDark ? '#60a5fa' : '#0284c7'} />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>Dark Mode</Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                  {isDark ? 'Dark theme active' : 'Light theme active'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => updateTheme(isDark ? 'clean-light' : 'clean-dark')}
+                style={[
+                  styles.toggle,
+                  isDark && styles.toggleActive
+                ]}
+                activeOpacity={0.7}
+              >
+                <View style={[
+                  styles.toggleThumb,
+                  isDark && styles.toggleThumbActive
+                ]} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>About</Text>
             
             <View style={styles.infoCard}>
               <FileText size={20} color="#64748b" />

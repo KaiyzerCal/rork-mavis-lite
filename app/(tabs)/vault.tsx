@@ -38,6 +38,7 @@ import {
 } from 'lucide-react-native';
 
 import { useApp } from '@/contexts/AppContext';
+import { useTheme } from '@/hooks/useTheme';
 import type { VaultEntry, AppFile, GeneratedImage, FileType } from '@/types';
 import CopyButton from '@/components/CopyButton';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -60,6 +61,7 @@ const FILE_TYPE_CONFIG = {
 export default function VaultScreen() {
   const insets = useSafeAreaInsets();
   const { state, addVaultEntry, updateVaultEntry, deleteVaultEntry, addFile, deleteFile, deleteGeneratedImage } = useApp();
+  const { colors, isDark } = useTheme();
   const [mainTab, setMainTab] = useState<'entries' | 'files'>('entries');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [editingEntry, setEditingEntry] = useState<VaultEntry | null>(null);
@@ -339,12 +341,12 @@ export default function VaultScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 12, backgroundColor: colors.background }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerTitleSection}>
-            <Archive size={28} color="#0f172a" />
-            <Text style={styles.headerTitle}>Vault</Text>
+            <Archive size={28} color={colors.textPrimary} />
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Vault</Text>
           </View>
           <TouchableOpacity 
             style={styles.addButton} 

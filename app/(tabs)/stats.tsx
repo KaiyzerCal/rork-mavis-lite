@@ -10,10 +10,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TrendingUp, TrendingDown } from 'lucide-react-native';
 
 import { useApp } from '@/contexts/AppContext';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function Stats() {
   const { state, isLoaded } = useApp();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   if (!isLoaded) {
     return (
@@ -28,11 +30,11 @@ export default function Stats() {
   const maxStatValue = 100;
 
   return (
-    <View style={styles.backgroundWrapper}>
+    <View style={[styles.backgroundWrapper, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Player Stats</Text>
-          <Text style={styles.subtitle}>Monitor your growth</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Player Stats</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Monitor your growth</Text>
         </View>
 
         <ScrollView

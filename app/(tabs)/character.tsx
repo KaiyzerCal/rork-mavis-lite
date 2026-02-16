@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shield, TrendingUp, Target, Award, Sparkle, Zap, CheckCircle, Plus, Edit2, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/hooks/useTheme';
 import { ARCHETYPE_DATA } from '@/constants/archetypes';
 import { HIDDEN_CLASSES, getHiddenClassProgress } from '@/constants/hiddenClasses';
 import type { HiddenClass } from '@/types';
@@ -24,6 +25,7 @@ export default function Character() {
   const { state, isLoaded, calculateLevel, addSkill, updateSkill, deleteSkill, addSubSkill, updateSubSkill, deleteSubSkill } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>('character');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [subSkillModalVisible, setSubSkillModalVisible] = useState<boolean>(false);
@@ -88,13 +90,13 @@ export default function Character() {
   const pendingClassQuests = classQuests.filter(q => q.status === 'pending');
 
   return (
-    <View style={styles.backgroundWrapper}>
+    <View style={[styles.backgroundWrapper, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Shield size={32} color="#6366f1" />
+          <Shield size={32} color={colors.accent} />
           <View style={styles.headerText}>
-            <Text style={styles.title}>Character</Text>
-            <Text style={styles.subtitle}>Your progression & skills</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Character</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your progression & skills</Text>
           </View>
         </View>
 
@@ -123,7 +125,7 @@ export default function Character() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-          <View style={styles.classCard}>
+          <View style={[styles.classCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.classHeader}>
               <View style={styles.classIconContainer}>
                 <Sparkle size={32} color="#6366f1" fill="#6366f1" />

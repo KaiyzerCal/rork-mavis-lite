@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
 import { useNaviAPI } from '@/contexts/NaviAPIContext';
 import { copyToClipboard } from '@/lib/clipboard';
+import { useTheme } from '@/hooks/useTheme';
 
 interface StoredMessage {
   id: string;
@@ -39,6 +40,7 @@ interface ProposedQuest {
 
 export default function NaviChatScreen() {
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
   const recordingRef = useRef<Audio.Recording | null>(null);
@@ -647,15 +649,15 @@ Total messages in history: ${displayMessages.length}`;
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
-        <Text style={styles.loadingText}>Loading conversation...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading conversation...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.backgroundWrapper}>
+    <View style={[styles.backgroundWrapper, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={[styles.container, { paddingTop: insets.top }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -663,10 +665,10 @@ Total messages in history: ${displayMessages.length}`;
       >
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <Sparkle size={28} color="#6366f1" fill="#6366f1" />
+            <Sparkle size={28} color={colors.accent} fill={colors.accent} />
             <View style={styles.headerText}>
-              <Text style={styles.headerTitle}>{naviName}</Text>
-              <Text style={styles.headerSubtitle}>Your Net-Navi companion</Text>
+              <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{naviName}</Text>
+              <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Your Net-Navi companion</Text>
             </View>
           </View>
           {state.user.characterClass && (

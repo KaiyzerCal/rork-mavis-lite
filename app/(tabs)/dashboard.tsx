@@ -15,11 +15,12 @@ import { router } from 'expo-router';
 
 import { useApp } from '@/contexts/AppContext';
 import { MBTI_QUESTIONS, MBTI_TO_ARCHETYPE } from '@/constants/archetypes';
+import { useTheme } from '@/hooks/useTheme';
 import type { MBTIType } from '@/types';
 
 export default function Dashboard() {
   const { state, isLoaded, calculateLevel, setCharacterClass } = useApp();
-
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   const [assessmentVisible, setAssessmentVisible] = useState(false);
@@ -82,7 +83,7 @@ export default function Dashboard() {
   };
 
   return (
-    <View style={styles.backgroundWrapper}>
+    <View style={[styles.backgroundWrapper, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <ScrollView
           style={styles.scrollView}

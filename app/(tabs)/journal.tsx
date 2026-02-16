@@ -14,6 +14,7 @@ import { Plus, X, Smile, Frown, Meh, Battery, BatteryLow, Copy } from 'lucide-re
 
 import { useApp } from '@/contexts/AppContext';
 import { copyToClipboard } from '@/lib/clipboard';
+import { useTheme } from '@/hooks/useTheme';
 
 const MOOD_ICONS = [
   { value: 1, icon: Frown, color: '#ef4444' },
@@ -32,6 +33,7 @@ const ENERGY_ICONS = [
 export default function Journal() {
   const { state, isLoaded, addJournalEntry } = useApp();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [newEntry, setNewEntry] = useState<{
     mood: number;

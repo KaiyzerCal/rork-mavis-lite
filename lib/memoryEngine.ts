@@ -1,4 +1,4 @@
-import { SQLiteStorage } from '@/lib/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { MemoryItem, RelationshipMemory, SessionSummary, AppState } from '@/types';
 
 const LTM_COMPRESSED_KEY = '@navi_ltm_compressed';
@@ -32,7 +32,7 @@ const EMPTY_LTM: LongTermMemoryStore = {
 
 export async function loadLongTermMemory(): Promise<LongTermMemoryStore> {
   try {
-    const stored = await SQLiteStorage.getItem(LTM_COMPRESSED_KEY);
+    const stored = await AsyncStorage.getItem(LTM_COMPRESSED_KEY);
     if (stored) {
       const parsed = JSON.parse(stored) as LongTermMemoryStore;
       console.log('[LTM] Loaded', parsed.blocks.length, 'compressed memory blocks');
@@ -46,7 +46,7 @@ export async function loadLongTermMemory(): Promise<LongTermMemoryStore> {
 
 export async function saveLongTermMemory(store: LongTermMemoryStore): Promise<void> {
   try {
-    await SQLiteStorage.setItem(LTM_COMPRESSED_KEY, JSON.stringify(store));
+    await AsyncStorage.setItem(LTM_COMPRESSED_KEY, JSON.stringify(store));
     console.log('[LTM] Saved', store.blocks.length, 'compressed memory blocks');
   } catch (error) {
     console.error('[LTM] Failed to save long-term memory:', error);
@@ -185,8 +185,8 @@ export function compressMemories(
   }
 
   for (const [, block] of blockMap) {
-    if (block.details.length > 50) {
-      block.details = block.details.slice(-50);
+    if (block.details.length > 500) {
+      block.details = block.details.slice(-500);
     }
     block.summary = generateBlockSummary(block);
   }

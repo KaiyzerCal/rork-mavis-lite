@@ -13,10 +13,12 @@ import { router } from 'expo-router';
 
 import { useApp } from '@/contexts/AppContext';
 import NaviAvatar from '@/components/NaviAvatar';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function Home() {
   const { state, isLoaded, calculateLevel } = useApp();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const totalXP = state.leaderboard.find(l => l.id === 'me')?.xp || 0;
   const playerLevel = calculateLevel(totalXP);
@@ -46,12 +48,12 @@ export default function Home() {
   }
 
   return (
-    <View style={styles.backgroundWrapper}>
+    <View style={[styles.backgroundWrapper, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>{greeting}, Operator</Text>
-            <Text style={styles.subGreeting}>Let&apos;s level up today</Text>
+            <Text style={[styles.greeting, { color: colors.textPrimary }]}>{greeting}, Operator</Text>
+            <Text style={[styles.subGreeting, { color: colors.textSecondary }]}>Let&apos;s level up today</Text>
           </View>
           <View style={styles.levelBadge}>
             <TrendingUp size={16} color="#ffffff" />
@@ -62,7 +64,7 @@ export default function Home() {
         <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
 
           <TouchableOpacity
-            style={styles.naviCard}
+            style={[styles.naviCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => router.push('/(tabs)/mavis' as any)}
             activeOpacity={0.8}
           >
@@ -77,7 +79,7 @@ export default function Home() {
             />
             <View style={styles.naviContent}>
               <Text style={styles.naviLabel}>Your Net-Navi</Text>
-              <Text style={styles.naviName}>{naviProfile.name}</Text>
+              <Text style={[styles.naviName, { color: colors.textPrimary }]}>{naviProfile.name}</Text>
               <View style={styles.naviBondBadge}>
                 <Text style={styles.naviBondText}>Bond Lv {naviProfile.bondLevel}</Text>
               </View>
@@ -89,59 +91,59 @@ export default function Home() {
 
 
           <View style={styles.quickActions}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
             <View style={styles.actionsGrid}>
               <TouchableOpacity
-                style={styles.actionCard}
+                style={[styles.actionCard, { backgroundColor: colors.surface }]}
                 onPress={() => router.push('/(tabs)/mavis' as any)}
                 activeOpacity={0.7}
               >
                 <MessageCircle size={32} color="#6366f1" />
-                <Text style={styles.actionLabel}>Talk to Navi</Text>
+                <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Talk to Navi</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.actionCard}
+                style={[styles.actionCard, { backgroundColor: colors.surface }]}
                 onPress={() => router.push('/(tabs)/quests' as any)}
                 activeOpacity={0.7}
               >
                 <Target size={32} color="#10b981" />
-                <Text style={styles.actionLabel}>View Quests</Text>
+                <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>View Quests</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.actionCard}
+                style={[styles.actionCard, { backgroundColor: colors.surface }]}
                 onPress={() => router.push('/(tabs)/character' as any)}
                 activeOpacity={0.7}
               >
                 <TrendingUp size={32} color="#f59e0b" />
-                <Text style={styles.actionLabel}>Progress</Text>
+                <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Progress</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.actionCard}
+                style={[styles.actionCard, { backgroundColor: colors.surface }]}
                 onPress={() => router.push('/(tabs)/vault' as any)}
                 activeOpacity={0.7}
               >
                 <Sparkle size={32} color="#8b5cf6" />
-                <Text style={styles.actionLabel}>Vault</Text>
+                <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Vault</Text>
               </TouchableOpacity>
             </View>
           </View>
 
 
 
-          <View style={styles.statsPreview}>
+          <View style={[styles.statsPreview, { backgroundColor: colors.surface }]}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{totalXP}</Text>
-              <Text style={styles.statLabel}>Total XP</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total XP</Text>
             </View>
-            <View style={styles.statDivider} />
+            <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{activeQuests.length}</Text>
-              <Text style={styles.statLabel}>Active Quests</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Active Quests</Text>
             </View>
-            <View style={styles.statDivider} />
+            <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{state.skills.length}</Text>
-              <Text style={styles.statLabel}>Skills</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Skills</Text>
             </View>
           </View>
         </ScrollView>

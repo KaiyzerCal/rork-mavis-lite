@@ -17,11 +17,13 @@ import { Target, Sparkle, CheckCircle, XCircle, Zap, Edit2, Trash2, Check, Plus,
 
 import { useApp } from '@/contexts/AppContext';
 import { copyToClipboard } from '@/lib/clipboard';
+import { useTheme } from '@/hooks/useTheme';
 import { QUEST_DIFFICULTIES, QUEST_DIFFICULTY_LABELS, QUEST_DIFFICULTY_DESCRIPTIONS, QUEST_XP_VALUES, QuestDifficulty } from '@/constants/questCategories';
 
 export default function Quests() {
   const { state, isLoaded, completeQuest, toggleQuestMilestone, updateQuest, acceptQuest, declineQuest, addQuest, deleteQuest } = useApp();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   
   const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
   const [addModalVisible, setAddModalVisible] = useState<boolean>(false);
@@ -144,7 +146,7 @@ export default function Quests() {
     const completedMilestones = quest.milestones.filter(m => m.completed).length;
 
     return (
-      <View key={quest.id} style={styles.questCard}>
+      <View key={quest.id} style={[styles.questCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.questHeader}>
           <View style={styles.questTypeBox}>
             <Text style={styles.questType}>{quest.type.toUpperCase()}</Text>
@@ -164,7 +166,7 @@ export default function Quests() {
         </View>
 
         <View style={styles.questTitleRow}>
-          <Text style={styles.questTitle}>{quest.title}</Text>
+          <Text style={[styles.questTitle, { color: colors.textPrimary }]}>{quest.title}</Text>
           <TouchableOpacity
             style={styles.copyQuestButton}
             onPress={() => copyToClipboard(`${quest.title}\n${quest.description}\n\nMilestones:\n${quest.milestones.map(m => `${m.completed ? '✅' : '⬜'} ${m.description}`).join('\n')}\n\nXP: ${quest.xpReward}`)}
@@ -173,7 +175,7 @@ export default function Quests() {
             <Copy size={14} color="#94a3b8" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.questDescription}>{quest.description}</Text>
+        <Text style={[styles.questDescription, { color: colors.textSecondary }]}>{quest.description}</Text>
 
         <View style={styles.questMilestones}>
           <Text style={styles.milestonesTitle}>
@@ -286,13 +288,13 @@ export default function Quests() {
   };
 
   return (
-    <View style={styles.backgroundWrapper}>
+    <View style={[styles.backgroundWrapper, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Target size={32} color="#6366f1" />
+          <Target size={32} color={colors.accent} />
           <View style={styles.headerText}>
-            <Text style={styles.title}>Quests</Text>
-            <Text style={styles.subtitle}>Your journey to greatness</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Quests</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your journey to greatness</Text>
           </View>
         </View>
 
@@ -303,21 +305,21 @@ export default function Quests() {
         >
           {pendingQuests.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>⏳ Pending ({pendingQuests.length})</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>⏳ Pending ({pendingQuests.length})</Text>
               {pendingQuests.map((quest) => renderQuest(quest, 'pending'))}
             </View>
           )}
 
           {activeQuests.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>⚔️ Active ({activeQuests.length})</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>⚔️ Active ({activeQuests.length})</Text>
               {activeQuests.map((quest) => renderQuest(quest, 'active'))}
             </View>
           )}
 
           {completedQuests.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>✅ Completed ({completedQuests.length})</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>✅ Completed ({completedQuests.length})</Text>
               {completedQuests.map((quest) => renderQuest(quest, 'completed'))}
             </View>
           )}

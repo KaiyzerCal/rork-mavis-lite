@@ -28,6 +28,7 @@ import {
 } from 'lucide-react-native';
 
 import { useApp } from '@/contexts/AppContext';
+import { useTheme } from '@/hooks/useTheme';
 import type { AppFile, GeneratedImage, FileType } from '@/types';
 import CopyButton from '@/components/CopyButton';
 
@@ -42,6 +43,7 @@ const FILE_TYPE_CONFIG = {
 export default function FilesManagerScreen() {
   const insets = useSafeAreaInsets();
   const { state, addFile, deleteFile, deleteGeneratedImage } = useApp();
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<'files' | 'images'>('files');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<AppFile | null>(null);

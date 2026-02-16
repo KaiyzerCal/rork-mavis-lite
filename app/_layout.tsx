@@ -10,6 +10,7 @@ import { NaviAPIProvider } from "@/contexts/NaviAPIContext";
 import { ProposalProvider } from "@/contexts/ProposalContext";
 import { BackendSyncProvider } from "@/contexts/BackendSyncContext";
 import { trpc, trpcClient } from "@/lib/trpc";
+import { darkTheme, lightTheme } from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,12 +25,14 @@ function RootLayoutNav() {
 }
 
 function AppContent() {
-  const { isLoaded } = useApp();
+  const { isLoaded, state } = useApp();
+  const isDark = state.settings.theme === 'clean-dark';
+  const colors = isDark ? darkTheme : lightTheme;
 
   if (!isLoaded) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
